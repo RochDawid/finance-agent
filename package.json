@@ -1,0 +1,50 @@
+{
+  "name": "finance-agent",
+  "version": "1.0.0",
+  "description": "AI-powered financial trading agent for day trading stocks, ETFs, and cryptocurrencies",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "scan": "tsx src/index.ts --scan",
+    "eval": "vitest run src/evals/",
+    "eval:judge": "vitest run src/evals/reasoning.eval.ts",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "finance",
+    "trading",
+    "ai",
+    "claude",
+    "agent"
+  ],
+  "author": "Dawid Roch",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.38",
+    "@anthropic-ai/sdk": "^0.74.0",
+    "chalk": "^5.6.2",
+    "dotenv": "^17.2.4",
+    "ink": "^6.7.0",
+    "ink-spinner": "^5.0.0",
+    "ink-table": "^3.1.0",
+    "technicalindicators": "^3.1.0",
+    "yahoo-finance2": "^3.13.0",
+    "yaml": "^2.8.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.13",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "eslint": "^9.39.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
