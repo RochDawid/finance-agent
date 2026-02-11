@@ -52,7 +52,7 @@ export async function judgeSignal(signal: Signal): Promise<EvalScore> {
   const client = new Anthropic();
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-opus-4-6",
     max_tokens: 500,
     system: JUDGE_PROMPT,
     messages: [

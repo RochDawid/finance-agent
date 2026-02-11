@@ -25,12 +25,8 @@ import type {
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-function last<T>(arr: T[]): T {
-  const item = arr[arr.length - 1];
-  if (item === undefined) {
-    throw new Error("Cannot get last element of empty array");
-  }
-  return item;
+function last<T>(arr: T[]): T | undefined {
+  return arr[arr.length - 1];
 }
 
 function emaBias(price: number, emaValue: number): Bias {
@@ -54,7 +50,7 @@ export function computeTrend(data: OHLCV[]): TrendIndicators {
   const closes = data.map((d) => d.close);
   const highs = data.map((d) => d.high);
   const lows = data.map((d) => d.low);
-  const price = last(closes);
+  const price = last(closes) ?? 0;
 
   const ema9Values = EMA.calculate({ period: 9, values: closes });
   const ema21Values = EMA.calculate({ period: 21, values: closes });
@@ -210,7 +206,7 @@ export function computeVolatility(data: OHLCV[]): VolatilityIndicators {
   const closes = data.map((d) => d.close);
   const highs = data.map((d) => d.high);
   const lows = data.map((d) => d.low);
-  const price = last(closes);
+  const price = last(closes) ?? 0;
 
   const bbResult = BollingerBands.calculate({
     period: 20,
@@ -282,7 +278,7 @@ export function computeVolume(data: OHLCV[]): VolumeIndicators {
   const highs = data.map((d) => d.high);
   const lows = data.map((d) => d.low);
   const volumes = data.map((d) => d.volume);
-  const currentVolume = last(volumes);
+  const currentVolume = last(volumes) ?? 0;
 
   // OBV
   const obvValues = OBV.calculate({ close: closes, volume: volumes });
@@ -299,8 +295,9 @@ export function computeVolume(data: OHLCV[]): VolumeIndicators {
     close: closes,
     volume: volumes,
   });
-  const vwapValue = last(vwapValues) ?? last(closes);
-  const price = last(closes);
+  const price = last(closes) ?? 0;
+  const vwapValue = last(vwapValues) ?? price;
+  
   let vwapBias: Bias = "neutral";
   if (price > vwapValue * 1.005) vwapBias = "bullish";
   else if (price < vwapValue * 0.995) vwapBias = "bearish";

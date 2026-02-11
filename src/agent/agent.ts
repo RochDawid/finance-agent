@@ -50,10 +50,11 @@ Remember: it's better to return zero signals than to force a marginal trade.`;
     prompt,
     options: {
       systemPrompt: SYSTEM_PROMPT,
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-opus-4-6",
+      thinking: {type: "adaptive" },
+      effort: "max",
       mcpServers: { "finance-tools": mcpServer },
       maxTurns: 10,
-      tools: [],
     },
   });
 
@@ -151,10 +152,11 @@ Then generate specific trade signals if a valid setup exists, or explain why no 
     prompt,
     options: {
       systemPrompt: SYSTEM_PROMPT,
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-opus-4-6",
+      thinking: {type: "adaptive" },
+      effort: "max",
       mcpServers: { "finance-tools": mcpServer },
       maxTurns: 8,
-      tools: [],
     },
   });
 
