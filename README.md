@@ -54,7 +54,7 @@ src/
 
 ### Prerequisites
 
-- Node.js >= 18
+- Node.js >= 24
 - An [Anthropic API key](https://console.anthropic.com/)
 - pnpm (recommended) or npm
 
