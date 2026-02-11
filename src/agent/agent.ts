@@ -1,9 +1,13 @@
-import { query, type SDKMessage, type SDKResultSuccess, type SDKAssistantMessage } from "@anthropic-ai/claude-agent-sdk";
+import {
+  query,
+  type SDKAssistantMessage,
+  type SDKResultSuccess
+} from "@anthropic-ai/claude-agent-sdk";
+import { formatReportForAgent } from "../analysis/scanner.js";
+import type { AnalysisReport } from "../types/index.js";
+import { SignalSchema, type Signal } from "../types/index.js";
 import { SYSTEM_PROMPT } from "./prompts/system.js";
 import { createTradingMcpServer } from "./tools.js";
-import { SignalSchema, type Signal } from "../types/index.js";
-import type { AnalysisReport } from "../types/index.js";
-import { formatReportForAgent } from "../analysis/scanner.js";
 
 export interface AgentResponse {
   marketOverview: string;
@@ -13,7 +17,9 @@ export interface AgentResponse {
   costUsd: number;
 }
 
-export async function runAgent(reports: AnalysisReport[]): Promise<AgentResponse> {
+export async function runAgent(
+  reports: AnalysisReport[],
+): Promise<AgentResponse> {
   const mcpServer = createTradingMcpServer();
 
   // Build the prompt with analysis reports
@@ -96,7 +102,10 @@ function parseAgentResponse(text: string, costUsd: number): AgentResponse {
           });
           signals.push(validated);
         } catch (err) {
-          console.warn(`Warning: skipping invalid signal for ${s.ticker ?? "unknown"}:`, err);
+          console.warn(
+            `Warning: skipping invalid signal for ${s.ticker ?? "unknown"}:`,
+            err,
+          );
         }
       }
     }

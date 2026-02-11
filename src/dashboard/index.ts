@@ -1,7 +1,7 @@
 import chalk from "chalk";
-import type { Signal, AppConfig } from "../types/index.js";
-import { scanWatchlist, type ScanResult } from "../analysis/scanner.js";
 import { runAgent, type AgentResponse } from "../agent/agent.js";
+import { scanWatchlist, type ScanResult } from "../analysis/scanner.js";
+import type { AppConfig, Signal } from "../types/index.js";
 
 function printHeader() {
   console.log(chalk.cyan.bold(`\n${"=".repeat(60)}`));

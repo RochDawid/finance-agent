@@ -1,4 +1,4 @@
-import { SignalSchema, type Signal, type EvalScore } from "../types/index.js";
+import { SignalSchema, type EvalScore, type Signal } from "../types/index.js";
 
 export function validateSignalStructure(signal: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = [];

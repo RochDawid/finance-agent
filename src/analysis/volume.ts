@@ -1,5 +1,5 @@
 import { SMA } from "technicalindicators";
-import type { OHLCV, Bias } from "../types/index.js";
+import type { Bias, OHLCV } from "../types/index.js";
 
 export interface VolumeProfile {
   priceLevel: number;
@@ -50,11 +50,20 @@ export function computeVolumeProfile(
 }
 
 export function computeVolumeAnalysis(data: OHLCV[]): VolumeAnalysis {
+  if (data.length === 0) {
+    throw new Error("Insufficient data for volume analysis");
+  }
+  
   const profile = computeVolumeProfile(data);
   const volumes = data.map((d) => d.volume);
 
+  const initialProfile = profile[0];
+  if (!initialProfile) {
+    throw new Error("Volume profile calculation failed");
+  }
+
   // Point of Control: price level with most volume
-  const poc = profile.reduce((max, p) => (p.volume > max.volume ? p : max), profile[0]);
+  const poc = profile.reduce((max, p) => (p.volume > max.volume ? p : max), initialProfile);
 
   // Value Area: 70% of volume centered on POC
   const totalVol = profile.reduce((s, p) => s + p.volume, 0);
@@ -66,15 +75,15 @@ export function computeVolumeAnalysis(data: OHLCV[]): VolumeAnalysis {
   let high = pocIdx;
 
   while (vaVol < targetVol && (low > 0 || high < profile.length - 1)) {
-    const lowerVol = low > 0 ? profile[low - 1].volume : 0;
-    const upperVol = high < profile.length - 1 ? profile[high + 1].volume : 0;
+    const lowerVol = low > 0 ? (profile[low - 1]?.volume ?? 0) : 0;
+    const upperVol = high < profile.length - 1 ? (profile[high + 1]?.volume ?? 0) : 0;
 
     if (lowerVol >= upperVol && low > 0) {
       low--;
-      vaVol += profile[low].volume;
+      vaVol += profile[low]?.volume ?? 0;
     } else if (high < profile.length - 1) {
       high++;
-      vaVol += profile[high].volume;
+      vaVol += profile[high]?.volume ?? 0;
     } else {
       break;
     }
@@ -82,7 +91,7 @@ export function computeVolumeAnalysis(data: OHLCV[]): VolumeAnalysis {
 
   // Volume trend
   const volMA = SMA.calculate({ period: 20, values: volumes });
-  const currentVol = volumes[volumes.length - 1];
+  const currentVol = volumes[volumes.length - 1] ?? 0;
   const avgVol = volMA[volMA.length - 1] ?? currentVol;
   const ratio = avgVol > 0 ? currentVol / avgVol : 1;
 

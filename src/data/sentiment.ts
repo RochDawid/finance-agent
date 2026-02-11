@@ -1,4 +1,4 @@
-import type { FearGreedIndex, SentimentData, Bias } from "../types/index.js";
+import type { Bias, FearGreedIndex, SentimentData } from "../types/index.js";
 
 const FEAR_GREED_URL = "https://api.alternative.me/fng/";
 

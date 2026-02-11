@@ -1,7 +1,7 @@
-import { readFileSync, existsSync } from "node:fs";
+import "dotenv/config";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import "dotenv/config";
 import type { AppConfig } from "./types/index.js";
 
 export function loadConfig(configPath?: string): AppConfig {
@@ -15,22 +15,37 @@ export function loadConfig(configPath?: string): AppConfig {
     if (existsSync(p)) {
       try {
         const raw = readFileSync(p, "utf-8");
-        const config = parseYaml(raw) as AppConfig;
+        const rawParsed = parseYaml(raw);
+        const parsed = (rawParsed && typeof rawParsed === "object" ? rawParsed : {}) as Partial<AppConfig>;
 
-        // Allow env vars to override API keys
-        config.apiKeys = {
-          ...config.apiKeys,
-          alphaVantage:
-            process.env.ALPHA_VANTAGE_API_KEY ||
-            config.apiKeys?.alphaVantage ||
-            undefined,
-          coinGecko:
-            process.env.COINGECKO_API_KEY ||
-            config.apiKeys?.coinGecko ||
-            undefined,
+        const apiKeys: AppConfig["apiKeys"] = parsed.apiKeys ?? {};
+
+        // Merge API keys handling strictly defined properties
+        const mergedApiKeys: AppConfig["apiKeys"] = { ...apiKeys };
+        if (process.env.ALPHA_VANTAGE_API_KEY) {
+          mergedApiKeys.alphaVantage = process.env.ALPHA_VANTAGE_API_KEY;
+        }
+        if (process.env.COINGECKO_API_KEY) {
+          mergedApiKeys.coinGecko = process.env.COINGECKO_API_KEY;
+        }
+
+        // 1. Define defaults
+        const defaults = {
+          watchlist: { stocks: [], crypto: [] },
+          risk: { maxRiskPerTrade: 0.01, minRiskReward: 2, portfolioSize: 10000 },
+          intervals: { scan: 3600, dataRefresh: 900 },
         };
 
-        return config;
+        // 2. Merge defaults with parsed config
+        const finalConfig: AppConfig = {
+          ...parsed,
+          watchlist: { ...defaults.watchlist, ...(parsed.watchlist ?? {}) },
+          risk: { ...defaults.risk, ...(parsed.risk ?? {}) },
+          intervals: { ...defaults.intervals, ...(parsed.intervals ?? {}) },
+          apiKeys: mergedApiKeys,
+        };
+
+        return finalConfig;
       } catch (err) {
         console.warn(`Warning: failed to parse config at ${p}:`, err);
       }

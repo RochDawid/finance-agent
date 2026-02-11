@@ -1,9 +1,9 @@
 import type {
-  OHLCV,
-  PriceLevel,
   FibonacciLevels,
-  PivotPoints,
   LevelAnalysis,
+  OHLCV,
+  PivotPoints,
+  PriceLevel,
 } from "../types/index.js";
 
 // ─── Support / Resistance from Price Action ──────────────────────────
@@ -17,15 +17,22 @@ export function findSupportResistance(
   const recentData = data.slice(-lookback * 3);
 
   // Find swing highs and lows
+  // Find swing highs and lows
   for (let i = 2; i < recentData.length - 2; i++) {
     const bar = recentData[i];
+    const prev1 = recentData[i - 1];
+    const prev2 = recentData[i - 2];
+    const next1 = recentData[i + 1];
+    const next2 = recentData[i + 2];
+
+    if (!bar || !prev1 || !prev2 || !next1 || !next2) continue;
 
     // Swing high
     if (
-      bar.high > recentData[i - 1].high &&
-      bar.high > recentData[i - 2].high &&
-      bar.high > recentData[i + 1].high &&
-      bar.high > recentData[i + 2].high
+      bar.high > prev1.high &&
+      bar.high > prev2.high &&
+      bar.high > next1.high &&
+      bar.high > next2.high
     ) {
       levels.push({
         price: bar.high,
@@ -37,10 +44,10 @@ export function findSupportResistance(
 
     // Swing low
     if (
-      bar.low < recentData[i - 1].low &&
-      bar.low < recentData[i - 2].low &&
-      bar.low < recentData[i + 1].low &&
-      bar.low < recentData[i + 2].low
+      bar.low < prev1.low &&
+      bar.low < prev2.low &&
+      bar.low < next1.low &&
+      bar.low < next2.low
     ) {
       levels.push({
         price: bar.low,
@@ -60,22 +67,29 @@ function clusterLevels(levels: PriceLevel[], tolerance: number): PriceLevel[] {
 
   const sorted = [...levels].sort((a, b) => a.price - b.price);
   const clusters: PriceLevel[] = [];
-  let current = sorted[0];
+  
+  const first = sorted[0];
+  if (!first) return [];
+
+  let current = first;
   let count = 1;
 
   for (let i = 1; i < sorted.length; i++) {
-    const diff = Math.abs(sorted[i].price - current.price) / current.price;
+    const nextLevel = sorted[i];
+    if (!nextLevel) continue;
+
+    const diff = Math.abs(nextLevel.price - current.price) / current.price;
     if (diff < tolerance) {
       count++;
       // Average the price
       current = {
         ...current,
-        price: (current.price + sorted[i].price) / 2,
+        price: (current.price + nextLevel.price) / 2,
         strength: count >= 3 ? "strong" : count >= 2 ? "moderate" : "weak",
       };
     } else {
       clusters.push(current);
-      current = sorted[i];
+      current = nextLevel;
       count = 1;
     }
   }
@@ -118,6 +132,11 @@ export function fibLevelsToPrice(fib: FibonacciLevels): PriceLevel[] {
 export function computeClassicPivots(data: OHLCV[]): PivotPoints {
   // Use the previous day's data
   const prev = data[data.length - 2] ?? data[data.length - 1];
+  
+  if (!prev) {
+    throw new Error("Insufficient data for classic pivots");
+  }
+
   const H = prev.high;
   const L = prev.low;
   const C = prev.close;
@@ -138,6 +157,11 @@ export function computeClassicPivots(data: OHLCV[]): PivotPoints {
 
 export function computeCamarillaPivots(data: OHLCV[]): PivotPoints {
   const prev = data[data.length - 2] ?? data[data.length - 1];
+  
+  if (!prev) {
+    throw new Error("Insufficient data for camarilla pivots");
+  }
+
   const H = prev.high;
   const L = prev.low;
   const C = prev.close;
@@ -170,7 +194,11 @@ function pivotsToLevels(pivots: PivotPoints): PriceLevel[] {
 // ─── Full Level Analysis ─────────────────────────────────────────────
 
 export function computeLevelAnalysis(ticker: string, data: OHLCV[]): LevelAnalysis {
-  const currentPrice = data[data.length - 1].close;
+  const lastBar = data[data.length - 1];
+  if (!lastBar) {
+    throw new Error("Insufficient data for level analysis");
+  }
+  const currentPrice = lastBar.close;
 
   const priceActionLevels = findSupportResistance(data);
   const fibonacci = computeFibonacci(data);

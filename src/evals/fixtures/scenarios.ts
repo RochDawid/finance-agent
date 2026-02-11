@@ -1,4 +1,4 @@
-import type { OHLCV, EvalScenario, Signal } from "../../types/index.js";
+import type { EvalScenario, OHLCV, Signal } from "../../types/index.js";
 
 // Generate OHLCV data for a bullish trend scenario
 function generateBullishTrend(basePrice: number, bars: number): OHLCV[] {

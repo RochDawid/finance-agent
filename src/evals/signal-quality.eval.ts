@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { GOOD_SIGNAL, BAD_SIGNAL } from "./fixtures/scenarios.js";
+import { describe, expect, it } from "vitest";
+import { BAD_SIGNAL, GOOD_SIGNAL } from "./fixtures/scenarios.js";
 import {
-  validateSignalStructure,
-  hasSpecificPrices,
   hasConcreteReasoning,
+  hasSpecificPrices,
+  validateSignalStructure,
 } from "./helpers.js";
 
 describe("Signal Quality Eval", () => {

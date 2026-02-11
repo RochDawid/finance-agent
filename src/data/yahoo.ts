@@ -1,7 +1,7 @@
 import YahooFinance from "yahoo-finance2";
 import type { OHLCV, Quote, Timeframe } from "../types/index.js";
 
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 const TIMEFRAME_TO_INTERVAL: Record<Timeframe, string> = {
   "1m": "1m",
@@ -12,14 +12,7 @@ const TIMEFRAME_TO_INTERVAL: Record<Timeframe, string> = {
   "1d": "1d",
 };
 
-const TIMEFRAME_TO_RANGE: Record<Timeframe, string> = {
-  "1m": "1d",
-  "5m": "5d",
-  "15m": "5d",
-  "1h": "1mo",
-  "4h": "3mo",
-  "1d": "6mo",
-};
+
 
 export async function fetchOHLCV(
   ticker: string,
@@ -105,12 +98,18 @@ function aggregateTo4h(hourlyBars: OHLCV[]): OHLCV[] {
   for (let i = 0; i < hourlyBars.length; i += 4) {
     const chunk = hourlyBars.slice(i, i + 4);
     if (chunk.length === 0) continue;
+
+    const first = chunk[0];
+    const last = chunk[chunk.length - 1];
+
+    if (!first || !last) continue;
+
     result.push({
-      timestamp: chunk[0].timestamp,
-      open: chunk[0].open,
+      timestamp: first.timestamp,
+      open: first.open,
       high: Math.max(...chunk.map((c) => c.high)),
       low: Math.min(...chunk.map((c) => c.low)),
-      close: chunk[chunk.length - 1].close,
+      close: last.close,
       volume: chunk.reduce((sum, c) => sum + c.volume, 0),
     });
   }

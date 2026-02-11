@@ -1,28 +1,19 @@
 watchlist:
   stocks:
-    - AAPL
-    - MSFT
-    - NVDA
-    - TSLA
-    - META
-    - AMZN
-    - SPY
-    - QQQ
+    - PLTR
   crypto:
     - bitcoin
-    - ethereum
-    - solana
 
 risk:
-  maxRiskPerTrade: 0.02   # 2% of portfolio
-  minRiskReward: 2.0       # 2:1 minimum
-  portfolioSize: 10000     # For position sizing
-  maxOpenPositions: 5
+  maxRiskPerTrade: 0.05 # 5% of portfolio
+  minRiskReward: 2.5 # 2.5:1 minimum
+  portfolioSize: 500 # For position sizing
+  maxOpenPositions: 3
   maxCorrelatedPositions: 2
 
 intervals:
-  scan: 300000             # 5 min scan interval (ms)
-  dataRefresh: 60000       # 1 min data refresh (ms)
+  scan: 300000 # 5 min scan interval (ms)
+  dataRefresh: 60000 # 1 min data refresh (ms)
 
 apiKeys:
   alphaVantage: ""

@@ -1,13 +1,14 @@
-import { tool, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
+import { createSdkMcpServer, tool } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod/v4";
-import { fetchOHLCV, fetchQuote } from "../data/yahoo.js";
-import { fetchCryptoPrice, fetchCryptoOHLC } from "../data/coingecko.js";
+
 import { computeTechnicalAnalysis } from "../analysis/indicators.js";
 import { computeLevelAnalysis } from "../analysis/levels.js";
-import { computeVolumeAnalysis } from "../analysis/volume.js";
-import { fetchSentimentData, getSentimentSummary } from "../data/sentiment.js";
 import { formatReportForAgent } from "../analysis/scanner.js";
-import type { Timeframe, AssetType, OHLCV, Quote, TechnicalAnalysis, LevelAnalysis } from "../types/index.js";
+import { computeVolumeAnalysis } from "../analysis/volume.js";
+import { fetchCryptoOHLC, fetchCryptoPrice } from "../data/coingecko.js";
+import { fetchSentimentData, getSentimentSummary } from "../data/sentiment.js";
+import { fetchOHLCV, fetchQuote } from "../data/yahoo.js";
+import type { AssetType, OHLCV, Quote, Timeframe } from "../types/index.js";
 
 const getStockData = tool(
   "get_stock_data",
@@ -223,13 +224,20 @@ const getSupportResistance = tool(
 
       if (data.length < 10) {
         return {
-          content: [{ type: "text", text: `Insufficient data for level analysis` }],
+          content: [{ type: "text", text: "Insufficient data for level analysis" }],
           isError: true,
         };
       }
 
       const levels = computeLevelAnalysis(args.ticker, data);
-      const currentPrice = data[data.length - 1].close;
+      const currentPrice = data[data.length - 1]?.close;
+
+      if (!currentPrice) {
+        return {
+          content: [{ type: "text", text: "Insufficient data for level analysis" }],
+          isError: true,
+        };
+      }
 
       const result = {
         ticker: args.ticker,

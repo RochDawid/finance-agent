@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { GOOD_SIGNAL, BAD_SIGNAL } from "./fixtures/scenarios.js";
-import { checkRiskReward, checkPositionSizing } from "./helpers.js";
+import { describe, expect, it } from "vitest";
 import type { Signal } from "../types/index.js";
+import { BAD_SIGNAL, GOOD_SIGNAL } from "./fixtures/scenarios.js";
+import { checkPositionSizing, checkRiskReward } from "./helpers.js";
 
 describe("Risk Management Eval", () => {
   describe("Risk/Reward Ratio", () => {

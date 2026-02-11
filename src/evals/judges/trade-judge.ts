@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Signal, EvalScore } from "../../types/index.js";
+import type { EvalScore, Signal } from "../../types/index.js";
 import { computeEvalScore } from "../helpers.js";
 
 const JUDGE_PROMPT = `You are an expert trading signal evaluator. You will be given a trading signal and must score it across 5 dimensions, each from 0-10.

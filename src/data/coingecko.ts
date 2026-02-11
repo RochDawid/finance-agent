@@ -66,14 +66,34 @@ export async function fetchCryptoOHLC(
     apiKey,
   );
 
-  return data.map(([timestamp, open, high, low, close]) => ({
-    timestamp: new Date(timestamp),
-    open,
-    high,
-    low,
-    close,
-    volume: 0, // OHLC endpoint doesn't include volume
-  }));
+  return data
+    .map((candle) => {
+      const timestamp = candle[0];
+      const open = candle[1];
+      const high = candle[2];
+      const low = candle[3];
+      const close = candle[4];
+
+      if (
+        timestamp === undefined ||
+        open === undefined ||
+        high === undefined ||
+        low === undefined ||
+        close === undefined
+      ) {
+        return null;
+      }
+
+      return {
+        timestamp: new Date(timestamp),
+        open,
+        high,
+        low,
+        close,
+        volume: 0, // OHLC endpoint doesn't include volume
+      };
+    })
+    .filter((candle): candle is OHLCV => candle !== null);
 }
 
 export async function fetchMultipleCryptoPrices(
@@ -86,26 +106,31 @@ export async function fetchMultipleCryptoPrices(
     apiKey,
   );
 
-  return coinIds
-    .filter((id) => data[id])
-    .map((id) => {
-      const coin = data[id];
-      const price = coin.usd;
-      const change = price * (coin.usd_24h_change / 100);
-      return {
-        ticker: id,
-        assetType: "crypto" as const,
-        price,
-        change,
-        changePercent: coin.usd_24h_change,
-        volume: coin.usd_24h_vol,
-        avgVolume: coin.usd_24h_vol,
-        high: price,
-        low: price,
-        open: price - change,
-        previousClose: price - change,
-        marketCap: coin.usd_market_cap,
-        timestamp: new Date(),
-      };
+  const results: Quote[] = [];
+
+  for (const id of coinIds) {
+    const coin = data[id];
+    if (!coin) continue;
+
+    const price = coin.usd;
+    const change = price * (coin.usd_24h_change / 100);
+    
+    results.push({
+      ticker: id,
+      assetType: "crypto",
+      price,
+      change,
+      changePercent: coin.usd_24h_change,
+      volume: coin.usd_24h_vol,
+      avgVolume: coin.usd_24h_vol,
+      high: price,
+      low: price,
+      open: price - change,
+      previousClose: price - change,
+      marketCap: coin.usd_market_cap,
+      timestamp: new Date(),
     });
+  }
+
+  return results;
 }

@@ -1,33 +1,36 @@
 import {
-  EMA,
-  SMA,
-  MACD,
-  RSI,
-  BollingerBands,
-  Stochastic,
   ADX,
-  CCI,
-  WilliamsR,
   ATR,
+  BollingerBands,
+  CCI,
+  EMA,
+  MACD,
   OBV,
+  RSI,
+  SMA,
+  Stochastic,
   VWAP,
+  WilliamsR,
 } from "technicalindicators";
 import type {
-  OHLCV,
   Bias,
-  IndicatorResult,
-  TrendIndicators,
   MomentumIndicators,
-  VolatilityIndicators,
-  VolumeIndicators,
+  OHLCV,
   TechnicalAnalysis,
   Timeframe,
+  TrendIndicators,
+  VolatilityIndicators,
+  VolumeIndicators
 } from "../types/index.js";
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function last<T>(arr: T[]): T {
-  return arr[arr.length - 1];
+  const item = arr[arr.length - 1];
+  if (item === undefined) {
+    throw new Error("Cannot get last element of empty array");
+  }
+  return item;
 }
 
 function emaBias(price: number, emaValue: number): Bias {
@@ -284,7 +287,7 @@ export function computeVolume(data: OHLCV[]): VolumeIndicators {
   // OBV
   const obvValues = OBV.calculate({ close: closes, volume: volumes });
   const obvValue = last(obvValues) ?? 0;
-  const obvPrev = obvValues.length > 1 ? obvValues[obvValues.length - 2] : obvValue;
+  const obvPrev = (obvValues.length > 1 ? obvValues[obvValues.length - 2] : undefined) ?? obvValue;
   let obvBias: Bias = "neutral";
   if (obvValue > obvPrev) obvBias = "bullish";
   else if (obvValue < obvPrev) obvBias = "bearish";

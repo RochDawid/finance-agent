@@ -1,6 +1,6 @@
+import chalk from "chalk";
 import { loadConfig } from "./config.js";
 import { startDashboard } from "./dashboard/index.js";
-import chalk from "chalk";
 
 const args = process.argv.slice(2);
 const isScanMode = args.includes("--scan");
