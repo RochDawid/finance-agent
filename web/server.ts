@@ -1,7 +1,12 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import { createServer } from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { parse } from "node:url";
 import next from "next";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 import { WebSocketServer, type WebSocket } from "ws";
 import type { WSEventType, WSMessage } from "./lib/types.js";
 import { startScanLoop } from "./lib/scan-loop.js";

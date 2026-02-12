@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,6 +7,9 @@ import type { AppConfig } from "./types/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Load .env from project root (parent of src/)
+dotenv.config({ path: resolve(__dirname, "../.env") });
 
 export function loadConfig(configPath?: string): AppConfig {
   const projectRoot = resolve(__dirname, "..");

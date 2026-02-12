@@ -5,5 +5,6 @@ export default defineConfig({
     include: ["src/evals/**/*.eval.ts"],
     testTimeout: 60_000,
     hookTimeout: 30_000,
+    setupFiles: ["dotenv/config"],
   },
 });

@@ -20,8 +20,7 @@ describe("Reasoning Quality Eval (LLM Judge)", () => {
       });
       expect(score.pass).toBe(true);
       expect(score.total).toBeGreaterThanOrEqual(30);
-    },
-    { timeout: 30_000 },
+    }
   );
 
   it(
@@ -40,8 +39,7 @@ describe("Reasoning Quality Eval (LLM Judge)", () => {
         feedback: badScore.feedback,
       });
       expect(badScore.total).toBeLessThan(goodScore.total);
-    },
-    { timeout: 30_000 },
+    }
   );
 
   it(
@@ -49,8 +47,7 @@ describe("Reasoning Quality Eval (LLM Judge)", () => {
     async () => {
       const score = await judgeSignal(GOOD_SIGNAL);
       expect(score.specificity).toBeGreaterThanOrEqual(6);
-    },
-    { timeout: 30_000 },
+    }
   );
 
   it(
@@ -58,8 +55,7 @@ describe("Reasoning Quality Eval (LLM Judge)", () => {
     async () => {
       const score = await judgeSignal(GOOD_SIGNAL);
       expect(score.riskManagement).toBeGreaterThanOrEqual(6);
-    },
-    { timeout: 30_000 },
+    }
   );
 
   it(
@@ -67,7 +63,6 @@ describe("Reasoning Quality Eval (LLM Judge)", () => {
     async () => {
       const score = await judgeSignal(GOOD_SIGNAL);
       expect(score.actionability).toBeGreaterThanOrEqual(6);
-    },
-    { timeout: 30_000 },
+    }
   );
 });
