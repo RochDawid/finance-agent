@@ -15,36 +15,43 @@ export function MarketOverview({ marketCondition }: MarketOverviewProps) {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm">Market Overview</CardTitle>
+          <CardTitle className="text-base">Market Overview</CardTitle>
           <RegimeBadge regime={regime} />
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-start gap-6">
-          <div className="space-y-2 flex-1">
+        <div className="flex items-start gap-8">
+          <div className="space-y-3 flex-1">
             <IndexChange name="S&P 500" change={sp500Change} />
+            <div className="border-t border-[var(--border)]" />
             <IndexChange name="NASDAQ" change={nasdaqChange} />
             {vixLevel !== undefined && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--muted-foreground)]">VIX</span>
-                <span className="font-mono">{vixLevel.toFixed(1)}</span>
-              </div>
+              <>
+                <div className="border-t border-[var(--border)]" />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--muted-foreground)]">VIX</span>
+                  <span className="font-mono">{vixLevel.toFixed(1)}</span>
+                </div>
+              </>
             )}
             {sentiment.marketBreadth && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--muted-foreground)]">Breadth</span>
-                <span className="font-mono">
-                  {sentiment.marketBreadth.advancers}A / {sentiment.marketBreadth.decliners}D
-                </span>
-              </div>
+              <>
+                <div className="border-t border-[var(--border)]" />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--muted-foreground)]">Breadth</span>
+                  <span className="font-mono">
+                    {sentiment.marketBreadth.advancers}A / {sentiment.marketBreadth.decliners}D
+                  </span>
+                </div>
+              </>
             )}
           </div>
           <FearGreedGauge
             value={sentiment.fearGreed.value}
             classification={sentiment.fearGreed.classification}
-            size={100}
+            size={110}
           />
         </div>
       </CardContent>

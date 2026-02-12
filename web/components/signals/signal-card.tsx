@@ -22,7 +22,7 @@ export function SignalCard({ signal, index, selected, className }: SignalCardPro
     <Link href={`/signals/${signal.id}`} className="block">
       <Card
         className={cn(
-          "transition-colors hover:border-[var(--ring)]",
+          "transition-all duration-200 hover:shadow-md hover:border-[var(--ring)]",
           selected && "border-[var(--ring)] ring-1 ring-[var(--ring)]",
           className,
         )}
@@ -46,8 +46,8 @@ function SignalCardHeader({ signal, index }: { signal: SignalWithId; index?: num
         {index !== undefined && (
           <span className="text-xs text-[var(--muted-foreground)] font-mono w-4">{index + 1}</span>
         )}
-        <CardTitle className="text-base">{signal.ticker}</CardTitle>
-        <Badge variant={signal.direction === "long" ? "bullish" : "bearish"} className="uppercase text-[10px]">
+        <CardTitle className="text-lg font-semibold tracking-tight">{signal.ticker}</CardTitle>
+        <Badge variant={signal.direction === "long" ? "bullish" : "bearish"} className="uppercase text-[10px] ml-1">
           {signal.direction}
         </Badge>
         <Badge variant="secondary" className="text-[10px]">

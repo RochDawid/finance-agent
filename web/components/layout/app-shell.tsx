@@ -39,7 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden bg-[var(--background)]">
         <div className="hidden md:flex">
           <Sidebar />
         </div>
@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             onOpenCommandPalette={() => setCmdOpen(true)}
             onOpenShortcuts={() => setShortcutsOpen(true)}
           />
-          <main id="main-content" className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
+          <main id="main-content" className="flex-1 overflow-y-auto p-6 md:p-8 pb-20 md:pb-8">
             {children}
           </main>
         </div>

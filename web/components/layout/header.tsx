@@ -4,8 +4,8 @@ import { useTheme } from "next-themes";
 import { Sun, Moon, Scan, Command, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ScanStatus } from "./scan-status";
 import { useWS } from "@/lib/providers/ws-provider";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   onOpenCommandPalette: () => void;
@@ -17,18 +17,17 @@ export function Header({ onOpenCommandPalette, onOpenShortcuts }: HeaderProps) {
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="flex items-center justify-between h-12 px-4 border-b border-[var(--border)] bg-[var(--card)]">
-      <div className="flex items-center gap-4">
-        <ScanStatus
-          isScanning={state.isScanning}
-          lastScanTime={state.lastScanTime}
-        />
+    <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--border)] bg-[var(--background)]">
+      <div className="flex items-center gap-3">
         {!connected && (
-          <span className="text-xs text-[var(--color-bearish)]">Disconnected</span>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[var(--color-bearish)]" />
+            <span className="text-xs text-[var(--color-bearish)]">Disconnected</span>
+          </div>
         )}
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -39,7 +38,7 @@ export function Header({ onOpenCommandPalette, onOpenShortcuts }: HeaderProps) {
               disabled={state.isScanning}
               aria-label="Trigger scan"
             >
-              <Scan className="h-4 w-4" />
+              <Scan className={cn("h-4 w-4", state.isScanning && "animate-spin-slow")} />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Scan now (Cmd+S)</TooltipContent>

@@ -3,6 +3,7 @@
 import { useWS } from "@/lib/providers/ws-provider";
 import { MarketOverview } from "@/components/market/market-overview";
 import { SignalList } from "@/components/signals/signal-list";
+import { ScanStatus } from "@/components/layout/scan-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -11,13 +12,21 @@ export function DashboardClient() {
 
   return (
     <div className="space-y-6">
+      {/* Scan status — always visible at top */}
+      <ScanStatus
+        isScanning={state.isScanning}
+        lastScanTime={state.lastScanTime}
+        scanStage={state.scanStage}
+        scanMessage={state.scanMessage}
+      />
+
       {/* Market overview */}
       <section aria-label="Market overview">
         {state.marketCondition ? (
           <MarketOverview marketCondition={state.marketCondition} />
-        ) : (
-          <Skeleton className="h-40 w-full" />
-        )}
+        ) : !state.isScanning ? (
+          <Skeleton className="h-40 w-full rounded-lg" />
+        ) : null}
       </section>
 
       {/* Agent overview */}
@@ -46,18 +55,13 @@ export function DashboardClient() {
         </div>
         {state.signals.length > 0 ? (
           <SignalList signals={state.signals} />
-        ) : state.isScanning ? (
-          <div className="space-y-3">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-        ) : (
+        ) : !state.isScanning ? (
           <Card>
             <CardContent className="py-8 text-center text-[var(--muted-foreground)] text-sm">
               No signals yet. Run a scan to generate trading signals.
             </CardContent>
           </Card>
-        )}
+        ) : null}
       </section>
 
       {/* Errors */}

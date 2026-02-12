@@ -27,6 +27,8 @@ export interface DashboardState {
   volumeAnalysis: Record<string, VolumeAnalysis>;
   agentResponse: AgentResponse | null;
   isScanning: boolean;
+  scanStage: string | null;
+  scanMessage: string | null;
   lastScanTime: string | null;
   errors: Array<{ ticker: string; error: string }>;
 }

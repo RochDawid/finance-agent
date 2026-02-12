@@ -25,6 +25,8 @@ const initialState: DashboardState = {
   volumeAnalysis: {},
   agentResponse: null,
   isScanning: false,
+  scanStage: null,
+  scanMessage: null,
   lastScanTime: null,
   errors: [],
 };
@@ -68,11 +70,17 @@ export function WSProvider({ children }: { children: ReactNode }) {
 
         switch (msg.type) {
           case "scan:start":
-            setState((prev) => ({ ...prev, isScanning: true }));
+            setState((prev) => ({ ...prev, isScanning: true, scanStage: null, scanMessage: null }));
             break;
-          case "scan:progress":
-            // Could display progress message
+          case "scan:progress": {
+            const progress = msg.data as { stage?: string; message?: string };
+            setState((prev) => ({
+              ...prev,
+              scanStage: progress.stage ?? prev.scanStage,
+              scanMessage: progress.message ?? prev.scanMessage,
+            }));
             break;
+          }
           case "scan:complete": {
             const data = msg.data as {
               signals: Signal[];
@@ -96,13 +104,15 @@ export function WSProvider({ children }: { children: ReactNode }) {
                 costUsd: data.costUsd,
               },
               isScanning: false,
+              scanStage: null,
+              scanMessage: null,
               lastScanTime: msg.timestamp,
               errors: data.errors,
             }));
             break;
           }
           case "scan:error":
-            setState((prev) => ({ ...prev, isScanning: false }));
+            setState((prev) => ({ ...prev, isScanning: false, scanStage: null, scanMessage: null }));
             break;
         }
       } catch {

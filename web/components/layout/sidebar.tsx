@@ -27,13 +27,13 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col border-r border-[var(--border)] bg-[var(--card)] transition-all duration-200",
-        collapsed ? "w-14" : "w-48",
+        "flex flex-col border-r border-[var(--border)] bg-[var(--background)] transition-all duration-200",
+        collapsed ? "w-14" : "w-56",
       )}
     >
       {/* Logo */}
-      <div className="flex items-center h-12 px-3 border-b border-[var(--border)]">
-        <Link href="/" className="flex items-center gap-2 overflow-hidden">
+      <div className="flex items-center h-14 px-3 border-b border-[var(--border)]">
+        <Link href="/" className="flex items-center gap-2.5 overflow-hidden">
           <BarChart3 className="h-5 w-5 shrink-0 text-[var(--color-bullish)]" />
           {!collapsed && (
             <span className="font-semibold text-sm truncate">Finance Agent</span>
@@ -42,7 +42,7 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-2 space-y-0.5 px-2" aria-label="Main navigation">
+      <nav className="flex-1 py-3 space-y-1 px-2" aria-label="Main navigation">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           return (
@@ -50,16 +50,16 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150",
                 isActive
-                  ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                  ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm"
                   : "text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)]",
               )}
             >
               <item.icon className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="truncate">{item.label}</span>}
               {!collapsed && item.shortcut && (
-                <kbd className="ml-auto text-[10px] text-[var(--muted-foreground)] bg-[var(--muted)] px-1 rounded">
+                <kbd className="ml-auto text-[10px] font-mono text-[var(--muted-foreground)] bg-[var(--muted)] px-1.5 py-0.5 rounded-md border border-[var(--border)]">
                   {item.shortcut}
                 </kbd>
               )}
@@ -73,7 +73,7 @@ export function Sidebar() {
         <Button
           variant="ghost"
           size="icon"
-          className="w-full h-7"
+          className="w-full h-8 rounded-lg"
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >

@@ -42,7 +42,7 @@ export function SignalList({ signals, selectedIndex, className }: SignalListProp
               key={dir}
               variant={filterDir === dir ? "default" : "ghost"}
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="h-7 px-2.5 text-xs"
               onClick={() => setFilterDir(dir)}
             >
               {dir}
@@ -60,7 +60,7 @@ export function SignalList({ signals, selectedIndex, className }: SignalListProp
               key={key}
               variant={sortBy === key ? "default" : "ghost"}
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="h-7 px-2.5 text-xs"
               onClick={() => setSortBy(key)}
             >
               {label}
@@ -82,7 +82,7 @@ export function SignalList({ signals, selectedIndex, className }: SignalListProp
           />
         ))}
         {filtered.length === 0 && (
-          <div className="text-center py-8 text-[var(--muted-foreground)] text-sm">
+          <div className="rounded-lg border border-dashed border-[var(--border)] py-8 text-center text-[var(--muted-foreground)] text-sm">
             No signals match the current filter
           </div>
         )}
