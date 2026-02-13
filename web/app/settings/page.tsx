@@ -7,18 +7,33 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Eye, EyeOff } from "lucide-react";
 import type { AppConfig } from "@finance/types/index.js";
 
 export default function SettingsPage() {
   const { config, isLoading, updateConfig } = useConfig();
+  const [activeTab, setActiveTab] = useState("risk");
   const [draft, setDraft] = useState<AppConfig | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab) setActiveTab(tab);
+  }, []);
   const [saving, setSaving] = useState(false);
+  const [anthropicKey, setAnthropicKey] = useState("");
+  const [anthropicKeySaved, setAnthropicKeySaved] = useState(false);
+  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
 
   useEffect(() => {
     if (config && !draft) {
       setDraft(config);
     }
   }, [config, draft]);
+
+  useEffect(() => {
+    setAnthropicKey(localStorage.getItem("anthropic_api_key") ?? "");
+  }, []);
 
   if (isLoading || !draft) {
     return (
@@ -35,6 +50,18 @@ export default function SettingsPage() {
     setSaving(false);
   };
 
+  const handleSaveAnthropicKey = () => {
+    if (anthropicKey.trim()) {
+      localStorage.setItem("anthropic_api_key", anthropicKey.trim());
+    } else {
+      localStorage.removeItem("anthropic_api_key");
+    }
+    // Notify other tabs/components
+    window.dispatchEvent(new Event("storage"));
+    setAnthropicKeySaved(true);
+    setTimeout(() => setAnthropicKeySaved(false), 2000);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -44,7 +71,7 @@ export default function SettingsPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="risk">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="risk">Risk</TabsTrigger>
           <TabsTrigger value="scan">Scan</TabsTrigger>
@@ -135,51 +162,88 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="api">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">API Keys</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm text-[var(--muted-foreground)] block mb-1">
-                  Alpha Vantage API Key
-                </label>
-                <Input
-                  type="password"
-                  value={draft.apiKeys.alphaVantage ?? ""}
-                  onChange={(e) =>
-                    setDraft({
-                      ...draft,
-                      apiKeys: {
-                        ...draft.apiKeys,
-                        alphaVantage: e.target.value || undefined,
-                      },
-                    })
-                  }
-                  placeholder="Enter API key..."
-                />
-              </div>
-              <div>
-                <label className="text-sm text-[var(--muted-foreground)] block mb-1">
-                  CoinGecko API Key
-                </label>
-                <Input
-                  type="password"
-                  value={draft.apiKeys.coinGecko ?? ""}
-                  onChange={(e) =>
-                    setDraft({
-                      ...draft,
-                      apiKeys: {
-                        ...draft.apiKeys,
-                        coinGecko: e.target.value || undefined,
-                      },
-                    })
-                  }
-                  placeholder="Enter API key..."
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {/* Anthropic API Key — stored in browser only */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Anthropic API Key</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  Required to run AI analysis. Stored only in your browser — never sent to our servers.
+                </p>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type={showAnthropicKey ? "text" : "password"}
+                      value={anthropicKey}
+                      onChange={(e) => setAnthropicKey(e.target.value)}
+                      placeholder="sk-ant-..."
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAnthropicKey((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                      aria-label={showAnthropicKey ? "Hide key" : "Show key"}
+                    >
+                      {showAnthropicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <Button size="sm" onClick={handleSaveAnthropicKey}>
+                    {anthropicKeySaved ? "Saved!" : "Save"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Other API keys — saved to server config */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Other API Keys</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm text-[var(--muted-foreground)] block mb-1">
+                    Alpha Vantage API Key
+                  </label>
+                  <Input
+                    type="password"
+                    value={draft.apiKeys.alphaVantage ?? ""}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        apiKeys: {
+                          ...draft.apiKeys,
+                          alphaVantage: e.target.value || undefined,
+                        },
+                      })
+                    }
+                    placeholder="Enter API key..."
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-[var(--muted-foreground)] block mb-1">
+                    CoinGecko API Key
+                  </label>
+                  <Input
+                    type="password"
+                    value={draft.apiKeys.coinGecko ?? ""}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        apiKeys: {
+                          ...draft.apiKeys,
+                          coinGecko: e.target.value || undefined,
+                        },
+                      })
+                    }
+                    placeholder="Enter API key..."
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
