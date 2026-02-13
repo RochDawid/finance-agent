@@ -2,20 +2,21 @@ import type { ScanResult } from "@finance/analysis/scanner.js";
 import type { AgentResponse } from "@finance/agent/agent.js";
 import type { ScanCacheData } from "./types.js";
 
-let cache: ScanCacheData = {
-  scanResult: null,
-  agentResponse: null,
-  timestamp: null,
-};
-
-let scanning = false;
+// Use globalThis so the cache is shared across all module instances
+// (custom server + Next.js API route handlers may load this module separately)
+declare global {
+  // eslint-disable-next-line no-var
+  var __scanCache: ScanCacheData | undefined;
+  // eslint-disable-next-line no-var
+  var __isScanning: boolean | undefined;
+}
 
 export function getScanCache(): ScanCacheData {
-  return cache;
+  return globalThis.__scanCache ?? { scanResult: null, agentResponse: null, timestamp: null };
 }
 
 export function setScanCache(scanResult: ScanResult, agentResponse: AgentResponse): void {
-  cache = {
+  globalThis.__scanCache = {
     scanResult,
     agentResponse,
     timestamp: new Date().toISOString(),
@@ -23,9 +24,9 @@ export function setScanCache(scanResult: ScanResult, agentResponse: AgentRespons
 }
 
 export function isScanning(): boolean {
-  return scanning;
+  return globalThis.__isScanning ?? false;
 }
 
 export function setScanning(value: boolean): void {
-  scanning = value;
+  globalThis.__isScanning = value;
 }
