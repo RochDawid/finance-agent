@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getScanCache, isScanning } from "@/lib/scan-cache";
+import { getScanCache, getScanHistory, isScanning } from "@/lib/scan-cache";
 import { performScan } from "@/lib/scan-loop";
 
 export async function GET() {
@@ -7,6 +7,7 @@ export async function GET() {
   return NextResponse.json({
     ...cache,
     isScanning: isScanning(),
+    history: getScanHistory(),
   });
 }
 
