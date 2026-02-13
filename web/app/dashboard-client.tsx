@@ -52,9 +52,9 @@ export function DashboardClient() {
         {hasApiKey && (
           <p className="mt-4 text-xs text-[var(--muted-foreground)]">
             or press{" "}
-            <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Ctrl+S</kbd>
+            <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Ctrl+A</kbd>
             {" "}·{" "}
-            <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Cmd+S</kbd>
+            <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Cmd+A</kbd>
           </p>
         )}
 

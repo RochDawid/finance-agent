@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useKeyboardShortcuts([
     { key: "k", meta: true, handler: () => setCmdOpen(true), description: "Command palette" },
-    { key: "s", meta: true, handler: () => triggerScan(), description: "Run analysis" },
+    { key: "a", meta: true, handler: () => triggerScan(), description: "Run analysis" },
     { key: "d", handler: () => router.push("/"), description: "Dashboard" },
     { key: "w", handler: () => router.push("/watchlist"), description: "Watchlist" },
     { key: ",", handler: () => router.push("/settings"), description: "Settings" },

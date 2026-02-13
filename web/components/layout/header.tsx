@@ -41,7 +41,7 @@ export function Header({ onOpenCommandPalette, onOpenShortcuts }: HeaderProps) {
               <Activity className={cn("h-4 w-4", state.isScanning && "animate-spin-slow")} />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Analyze now (Cmd+S)</TooltipContent>
+          <TooltipContent>Analyze now (Cmd+A)</TooltipContent>
         </Tooltip>
 
         <Tooltip>
