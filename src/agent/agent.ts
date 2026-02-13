@@ -56,7 +56,7 @@ Remember: it's better to return zero signals than to force a marginal trade.`;
       effort: "max",
       mcpServers: { "finance-tools": mcpServer },
       maxTurns: 10,
-      ...(apiKey && { env: { ANTHROPIC_API_KEY: apiKey } }),
+      ...(apiKey && { env: { ...process.env, ANTHROPIC_API_KEY: apiKey } }),
     },
   });
 
@@ -160,7 +160,7 @@ Then generate specific trade signals if a valid setup exists, or explain why no 
       effort: "max",
       mcpServers: { "finance-tools": mcpServer },
       maxTurns: 8,
-      ...(apiKey && { env: { ANTHROPIC_API_KEY: apiKey } }),
+      ...(apiKey && { env: { ...process.env, ANTHROPIC_API_KEY: apiKey } }),
     },
   });
 
