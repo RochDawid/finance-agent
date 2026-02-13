@@ -1,20 +1,20 @@
 watchlist:
   stocks:
-    - PLTR
+    - TSLA
+    - NVDA
+    - EDR.MC
   crypto:
     - bitcoin
-
+    - ethereum
 risk:
-  maxRiskPerTrade: 0.05 # 5% of portfolio
-  minRiskReward: 2.5 # 2.5:1 minimum
-  portfolioSize: 500 # For position sizing
-  maxOpenPositions: 3
+  maxRiskPerTrade: 0.05
+  minRiskReward: 2
+  portfolioSize: 500
+  maxOpenPositions: 1
   maxCorrelatedPositions: 2
-
 intervals:
-  scan: 300000 # 5 min scan interval (ms)
-  dataRefresh: 60000 # 1 min data refresh (ms)
-
+  scan: 300000
+  dataRefresh: 60000
 apiKeys:
   alphaVantage: ""
   coinGecko: ""
