@@ -29,6 +29,13 @@ export function DashboardClient() {
           trading signals — all in one click.
         </p>
 
+        {scanError && (
+          <div className="flex items-start gap-2 mb-6 px-4 py-2.5 rounded-lg border border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400 text-sm text-left max-w-sm w-full">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>{scanError}</span>
+          </div>
+        )}
+
         {!hasApiKey && (
           <Link
             href="/settings?tab=api"
