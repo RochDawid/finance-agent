@@ -23,7 +23,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   useKeyboardShortcuts([
     { key: "k", meta: true, handler: () => setCmdOpen(true), description: "Command palette" },
     { key: "s", meta: true, handler: () => triggerScan(), description: "Trigger scan" },
-    { key: "d", meta: true, handler: () => router.push("/"), description: "Dashboard" },
+    { key: "d", handler: () => router.push("/"), description: "Dashboard" },
+    { key: "w", handler: () => router.push("/watchlist"), description: "Watchlist" },
+    { key: ",", handler: () => router.push("/settings"), description: "Settings" },
     { key: "?", handler: () => setShortcutsOpen(true), description: "Shortcuts help" },
     { key: "t", handler: () => setTheme(theme === "dark" ? "light" : "dark"), description: "Toggle theme" },
     { key: "Escape", handler: () => { setCmdOpen(false); setShortcutsOpen(false); }, description: "Close" },
