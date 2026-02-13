@@ -61,12 +61,38 @@ export async function fetchCryptoOHLC(
   days: 1 | 7 | 14 | 30 = 30,
   apiKey?: string,
 ): Promise<OHLCV[]> {
-  const data = await fetchJSON<number[][]>(
-    `${BASE_URL}/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`,
-    apiKey,
-  );
+  // Fetch OHLC candles and daily volumes in parallel
+  const [ohlcData, chartData] = await Promise.all([
+    fetchJSON<number[][]>(
+      `${BASE_URL}/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`,
+      apiKey,
+    ),
+    fetchJSON<{ total_volumes: number[][] }>(
+      `${BASE_URL}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}&interval=daily`,
+      apiKey,
+    ).catch(() => ({ total_volumes: [] as number[][] })),
+  ]);
 
-  return data
+  // Build a day-key → volume map from daily market chart data
+  const volumeByDay = new Map<string, number>();
+  for (const [ts, vol] of chartData.total_volumes) {
+    if (ts !== undefined && vol !== undefined) {
+      const dayKey = new Date(ts).toISOString().slice(0, 10);
+      volumeByDay.set(dayKey, vol);
+    }
+  }
+
+  // For N-hour candles, multiple candles share a day — distribute volume evenly
+  const dayCount = new Map<string, number>();
+  for (const candle of ohlcData) {
+    const ts = candle[0];
+    if (ts !== undefined) {
+      const dayKey = new Date(ts).toISOString().slice(0, 10);
+      dayCount.set(dayKey, (dayCount.get(dayKey) ?? 0) + 1);
+    }
+  }
+
+  return ohlcData
     .map((candle) => {
       const timestamp = candle[0];
       const open = candle[1];
@@ -84,13 +110,17 @@ export async function fetchCryptoOHLC(
         return null;
       }
 
+      const dayKey = new Date(timestamp).toISOString().slice(0, 10);
+      const dailyVol = volumeByDay.get(dayKey) ?? 0;
+      const candlesInDay = dayCount.get(dayKey) ?? 1;
+
       return {
         timestamp: new Date(timestamp),
         open,
         high,
         low,
         close,
-        volume: 0, // OHLC endpoint doesn't include volume
+        volume: dailyVol / candlesInDay,
       };
     })
     .filter((candle): candle is OHLCV => candle !== null);
