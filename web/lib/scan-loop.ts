@@ -4,9 +4,16 @@ import { loadConfig } from "@finance/config.js";
 import { broadcast } from "./ws-server.js";
 import { setScanCache, isScanning, setScanning } from "./scan-cache.js";
 
-export async function performScan(): Promise<void> {
+export async function performScan(apiKey?: string): Promise<void> {
   if (isScanning()) {
     console.log("[scan] Scan already in progress, skipping");
+    return;
+  }
+
+  // Require an API key (user-provided or server env var)
+  const effectiveKey = apiKey ?? process.env.ANTHROPIC_API_KEY;
+  if (!effectiveKey) {
+    broadcast("scan:error", { error: "No API key configured. Add yours in Settings → API Keys." });
     return;
   }
 
@@ -21,7 +28,8 @@ export async function performScan(): Promise<void> {
     const scanResult = await scanWatchlist(stocks, crypto);
 
     broadcast("scan:progress", { stage: "analyzing", message: "Running AI analysis..." });
-    const agentResponse = await runAgent(scanResult.reports);
+    // Never log the apiKey
+    const agentResponse = await runAgent(scanResult.reports, effectiveKey);
 
     setScanCache(scanResult, agentResponse);
 
