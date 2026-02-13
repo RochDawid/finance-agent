@@ -150,7 +150,7 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => setShowAnthropicKey((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
                       aria-label={showAnthropicKey ? "Hide key" : "Show key"}
                     >
                       {showAnthropicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

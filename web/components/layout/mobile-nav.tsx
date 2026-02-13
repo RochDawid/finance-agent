@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, List, Settings } from "lucide-react";
+import { LayoutDashboard, List, Clock, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/watchlist", label: "Watchlist", icon: List },
+  { href: "/history", label: "History", icon: Clock },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -24,8 +25,10 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center gap-0.5 py-1 px-3 text-xs touch-manipulation",
-                isActive ? "text-[var(--foreground)]" : "text-[var(--muted-foreground)]",
+                "flex flex-col items-center gap-0.5 py-1 px-3 text-xs touch-manipulation transition-colors",
+                isActive
+                  ? "text-[var(--foreground)]"
+                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
               )}
             >
               <item.icon className="h-5 w-5" />

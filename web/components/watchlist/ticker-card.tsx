@@ -31,8 +31,8 @@ export function TickerCard({ quote, sparklineData, onRemove }: TickerCardProps) 
           <X className="h-3 w-3" />
         </Button>
       )}
-      <Link href={`/analysis/${quote.ticker}`}>
-        <CardContent className="p-3">
+      <Link href={`/analysis/${quote.ticker}`} className="block cursor-pointer">
+        <CardContent className="p-3 hover:bg-[var(--accent)] transition-colors rounded-[inherit]">
           <div className="flex items-center justify-between mb-1">
             <span className="font-medium text-sm">{quote.ticker}</span>
             <span className="text-[10px] text-[var(--muted-foreground)] uppercase">{quote.assetType}</span>

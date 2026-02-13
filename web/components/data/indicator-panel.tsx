@@ -24,7 +24,7 @@ export function IndicatorPanel({
     <div className={cn("border-b border-[var(--border)] last:border-b-0", className)}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between py-2 text-sm font-medium hover:text-[var(--foreground)] text-[var(--muted-foreground)] transition-colors"
+        className="flex w-full cursor-pointer items-center justify-between py-2 text-sm font-medium hover:text-[var(--foreground)] text-[var(--muted-foreground)] transition-colors"
         aria-expanded={open}
       >
         <span>{title}</span>

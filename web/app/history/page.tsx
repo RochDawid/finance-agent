@@ -35,7 +35,7 @@ function HistoryEntry({ entry, index }: { entry: ScanHistoryEntry; index: number
     <Card>
       <CardHeader className="pb-3">
         <button
-          className="flex items-start justify-between gap-3 w-full text-left"
+          className="flex items-start justify-between gap-3 w-full text-left rounded-lg p-1 -m-1 cursor-pointer hover:bg-[var(--accent)] transition-colors"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
         >
