@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
-import { loadConfig } from "@finance/config.js";
+import { loadConfig, findConfigPath } from "@finance/config.js";
 import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { stringify } from "yaml";
-
-function getConfigPath(): string {
-  return resolve(import.meta.dirname, "../../../../config.default.yaml");
-}
 
 export async function PATCH(request: Request) {
   try {
@@ -30,8 +25,7 @@ export async function PATCH(request: Request) {
       }
     }
 
-    const configPath = getConfigPath();
-    writeFileSync(configPath, stringify(config), "utf-8");
+    writeFileSync(findConfigPath(), stringify(config), "utf-8");
 
     return NextResponse.json({ watchlist: config.watchlist });
   } catch (error) {
