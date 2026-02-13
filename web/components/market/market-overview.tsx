@@ -1,60 +1,56 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn, formatPercent } from "@/lib/utils";
 import { RegimeBadge } from "@/components/data/regime-badge";
-import { FearGreedGauge } from "@/components/charts/fear-greed-gauge";
-import { IndexChange } from "./index-change";
 import type { MarketCondition } from "@finance/types/index.js";
 
 interface MarketOverviewProps {
   marketCondition: MarketCondition;
 }
 
+function ChangeChip({ label, value }: { label: string; value: number }) {
+  const positive = value >= 0;
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs text-[var(--muted-foreground)]">{label}</span>
+      <span
+        className={cn(
+          "text-xs font-mono font-medium",
+          positive ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
+        )}
+      >
+        {formatPercent(value)}
+      </span>
+    </div>
+  );
+}
+
 export function MarketOverview({ marketCondition }: MarketOverviewProps) {
   const { regime, sp500Change, nasdaqChange, sentiment, vixLevel } = marketCondition;
+  const fg = sentiment.fearGreed;
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Market Overview</CardTitle>
-          <RegimeBadge regime={regime} />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-start gap-8">
-          <div className="space-y-3 flex-1">
-            <IndexChange name="S&P 500" change={sp500Change} />
-            <div className="border-t border-[var(--border)]" />
-            <IndexChange name="NASDAQ" change={nasdaqChange} />
-            {vixLevel !== undefined && (
-              <>
-                <div className="border-t border-[var(--border)]" />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[var(--muted-foreground)]">VIX</span>
-                  <span className="font-mono">{vixLevel.toFixed(1)}</span>
-                </div>
-              </>
-            )}
-            {sentiment.marketBreadth && (
-              <>
-                <div className="border-t border-[var(--border)]" />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[var(--muted-foreground)]">Breadth</span>
-                  <span className="font-mono">
-                    {sentiment.marketBreadth.advancers}A / {sentiment.marketBreadth.decliners}D
-                  </span>
-                </div>
-              </>
-            )}
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-sm">
+      <ChangeChip label="S&P 500" value={sp500Change} />
+      <span className="text-[var(--border)] select-none">·</span>
+      <ChangeChip label="NASDAQ" value={nasdaqChange} />
+      {vixLevel !== undefined && (
+        <>
+          <span className="text-[var(--border)] select-none">·</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-[var(--muted-foreground)]">VIX</span>
+            <span className="text-xs font-mono font-medium">{vixLevel.toFixed(1)}</span>
           </div>
-          <FearGreedGauge
-            value={sentiment.fearGreed.value}
-            classification={sentiment.fearGreed.classification}
-            size={110}
-          />
-        </div>
-      </CardContent>
-    </Card>
+        </>
+      )}
+      <span className="text-[var(--border)] select-none">·</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-[var(--muted-foreground)]">Fear &amp; Greed</span>
+        <span className="text-xs font-mono font-medium">{fg.value}</span>
+        <span className="text-xs text-[var(--muted-foreground)]">({fg.classification})</span>
+      </div>
+      <span className="text-[var(--border)] select-none hidden sm:inline">·</span>
+      <RegimeBadge regime={regime} />
+    </div>
   );
 }
