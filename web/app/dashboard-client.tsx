@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Activity, TrendingUp, BarChart3, Zap, KeyRound, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { cn, formatPrice, formatPercent } from "@/lib/utils";
 
 export function DashboardClient() {
   const { state, triggerScan, hasApiKey } = useWS();
@@ -112,6 +113,40 @@ export function DashboardClient() {
       {state.marketCondition && (
         <section aria-label="Market overview">
           <MarketOverview marketCondition={state.marketCondition} />
+        </section>
+      )}
+
+      {/* Watchlist prices */}
+      {state.reports.length > 0 && (
+        <section aria-label="Watchlist prices">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+            {state.reports.map((report) => {
+              const { quote } = report;
+              const positive = quote.changePercent >= 0;
+              return (
+                <Link
+                  key={report.ticker}
+                  href={`/analysis/${report.ticker}`}
+                  className="flex flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 hover:bg-[var(--accent)] transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-xs font-medium truncate">{report.ticker}</span>
+                    <span
+                      className={cn(
+                        "text-[10px] font-mono font-medium shrink-0",
+                        positive ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
+                      )}
+                    >
+                      {positive ? "+" : ""}{formatPercent(quote.changePercent)}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono text-[var(--muted-foreground)]">
+                    ${formatPrice(quote.price)}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </section>
       )}
 
