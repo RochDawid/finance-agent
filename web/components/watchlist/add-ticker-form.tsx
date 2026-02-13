@@ -15,7 +15,7 @@ export function AddTickerForm({ onAdd }: AddTickerFormProps) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const trimmed = ticker.trim().toUpperCase();
+    const trimmed = ticker.trim();
     if (!trimmed) return;
     onAdd(trimmed, type);
     setTicker("");
@@ -27,7 +27,7 @@ export function AddTickerForm({ onAdd }: AddTickerFormProps) {
         value={ticker}
         onChange={(e) => setTicker(e.target.value)}
         placeholder="Add ticker..."
-        className="h-8 w-32 text-sm font-mono uppercase"
+        className="h-8 w-32 text-sm font-mono"
         aria-label="Ticker symbol"
       />
       <div className="flex items-center gap-1">
