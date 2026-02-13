@@ -39,3 +39,13 @@ export interface ScanCacheData {
   agentResponse: AgentResponse | null;
   timestamp: string | null;
 }
+
+export interface ScanHistoryEntry {
+  timestamp: string;
+  signals: Signal[];
+  marketCondition: MarketCondition | null;
+  marketOverview: string;
+  costUsd: number;
+  errors: Array<{ ticker: string; error: string }>;
+  reports: AnalysisReport[];
+}
