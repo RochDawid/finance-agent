@@ -5,29 +5,80 @@ import { MarketOverview } from "@/components/market/market-overview";
 import { SignalList } from "@/components/signals/signal-list";
 import { ScanStatus } from "@/components/layout/scan-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Scan, TrendingUp, BarChart3, Zap } from "lucide-react";
 
 export function DashboardClient() {
-  const { state } = useWS();
+  const { state, triggerScan } = useWS();
+
+  const hasData = state.signals.length > 0 || state.marketCondition !== null;
+
+  // Empty state — no scan has been run yet
+  if (!state.isScanning && !hasData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
+        <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-[var(--accent)] mb-8">
+          <TrendingUp className="h-10 w-10 text-[var(--foreground)]" />
+        </div>
+
+        <h2 className="text-2xl font-bold tracking-tight mb-3">Ready to scan the market?</h2>
+        <p className="text-[var(--muted-foreground)] max-w-sm mb-8 leading-relaxed">
+          Fetch live quotes, run technical analysis on your watchlist, and generate AI-powered
+          trading signals — all in one click.
+        </p>
+
+        <Button
+          size="lg"
+          onClick={triggerScan}
+          className="gap-2 px-6 font-semibold"
+        >
+          <Scan className="h-5 w-5" />
+          Run Market Scan
+        </Button>
+
+        <p className="mt-4 text-xs text-[var(--muted-foreground)]">
+          or press{" "}
+          <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Ctrl+S</kbd>
+          {" "}·{" "}
+          <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Cmd+S</kbd>
+        </p>
+
+        <div className="mt-16 grid grid-cols-3 gap-6 max-w-lg w-full text-left">
+          {[
+            { icon: BarChart3, label: "15+ Indicators", desc: "EMA, MACD, RSI, Bollinger Bands, ATR, VWAP and more" },
+            { icon: Zap, label: "AI Signals", desc: "Claude reasons over multi-timeframe confluence to find setups" },
+            { icon: TrendingUp, label: "Risk-Managed", desc: "Every signal includes entry, stop loss, and 3 take-profit levels" },
+          ].map(({ icon: Icon, label, desc }) => (
+            <div key={label} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Icon className="h-4 w-4 text-[var(--muted-foreground)]" />
+                <span className="text-sm font-medium">{label}</span>
+              </div>
+              <p className="text-xs text-[var(--muted-foreground)] leading-snug">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Scan status — always visible at top */}
+      {/* Scan status — shows progress or last scan time */}
       <ScanStatus
         isScanning={state.isScanning}
         lastScanTime={state.lastScanTime}
         scanStage={state.scanStage}
         scanMessage={state.scanMessage}
+        onScan={triggerScan}
       />
 
       {/* Market overview */}
-      <section aria-label="Market overview">
-        {state.marketCondition ? (
+      {state.marketCondition && (
+        <section aria-label="Market overview">
           <MarketOverview marketCondition={state.marketCondition} />
-        ) : !state.isScanning ? (
-          <Skeleton className="h-40 w-full rounded-lg" />
-        ) : null}
-      </section>
+        </section>
+      )}
 
       {/* Agent overview */}
       {state.agentResponse?.marketOverview && (
@@ -58,7 +109,7 @@ export function DashboardClient() {
         ) : !state.isScanning ? (
           <Card>
             <CardContent className="py-8 text-center text-[var(--muted-foreground)] text-sm">
-              No signals yet. Run a scan to generate trading signals.
+              No signals generated. Try running another scan.
             </CardContent>
           </Card>
         ) : null}

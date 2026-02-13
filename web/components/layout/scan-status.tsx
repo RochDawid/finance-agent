@@ -1,16 +1,19 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Scan } from "lucide-react";
 
 interface ScanStatusProps {
   isScanning: boolean;
   lastScanTime: string | null;
   scanStage?: string | null;
   scanMessage?: string | null;
+  onScan?: () => void;
   className?: string;
 }
 
-export function ScanStatus({ isScanning, lastScanTime, scanStage, scanMessage, className }: ScanStatusProps) {
+export function ScanStatus({ isScanning, lastScanTime, scanStage, scanMessage, onScan, className }: ScanStatusProps) {
   if (isScanning) {
     return (
       <div
@@ -55,16 +58,7 @@ export function ScanStatus({ isScanning, lastScanTime, scanStage, scanMessage, c
   }
 
   if (!lastScanTime) {
-    return (
-      <div
-        className={cn(
-          "rounded-lg border border-dashed border-[var(--border)] px-4 py-3 text-sm text-[var(--muted-foreground)]",
-          className,
-        )}
-      >
-        No scan yet — press <kbd className="mx-1 rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Cmd+S</kbd> to run a scan.
-      </div>
-    );
+    return null;
   }
 
   const time = new Date(lastScanTime);
@@ -73,13 +67,26 @@ export function ScanStatus({ isScanning, lastScanTime, scanStage, scanMessage, c
   return (
     <div
       className={cn(
-        "flex items-center gap-2 text-sm text-[var(--muted-foreground)]",
+        "flex items-center justify-between",
         className,
       )}
     >
-      <span className="h-2 w-2 rounded-full bg-[var(--color-bullish)]" />
-      <span>Last scan</span>
-      <span className="font-mono">{formatted}</span>
+      <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+        <span className="h-2 w-2 rounded-full bg-[var(--color-bullish)]" />
+        <span>Last scan</span>
+        <span className="font-mono">{formatted}</span>
+      </div>
+      {onScan && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onScan}
+          className="gap-1.5 h-7 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+        >
+          <Scan className="h-3.5 w-3.5" />
+          Scan again
+        </Button>
+      )}
     </div>
   );
 }

@@ -11,13 +11,10 @@ const shortcuts = [
   { keys: ["Cmd", "K"], description: "Command palette" },
   { keys: ["Cmd", "S"], description: "Trigger scan" },
   { keys: ["Cmd", "D"], description: "Go to dashboard" },
-  { keys: ["j"], description: "Next item" },
-  { keys: ["k"], description: "Previous item" },
-  { keys: ["Enter"], description: "Open selected" },
-  { keys: ["Escape"], description: "Close / back" },
+  { keys: ["Escape"], description: "Close dialog" },
   { keys: ["?"], description: "This help" },
   { keys: ["t"], description: "Toggle theme" },
-  { keys: ["1", "-", "9"], description: "Select signal by index" },
+  { keys: ["1–9"], description: "Open signal by index" },
 ];
 
 export function ShortcutsHelp({ open, onOpenChange }: ShortcutsHelpProps) {

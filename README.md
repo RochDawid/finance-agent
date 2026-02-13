@@ -73,14 +73,13 @@ web/                          # Next.js 15 web dashboard
 
 - Node.js >= 24
 - An [Anthropic API key](https://console.anthropic.com/)
-- pnpm (recommended) or npm
 
 ### Install
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/finance-agent.git
 cd finance-agent
-pnpm install
+npm install
 ```
 
 ### Configure
@@ -108,7 +107,7 @@ cp config.default.yaml config.yaml
 Scans the full watchlist, runs AI analysis, and prints trading signals:
 
 ```bash
-pnpm run scan
+npm run scan
 ```
 
 ### Terminal Dashboard
@@ -116,7 +115,7 @@ pnpm run scan
 Console UI that auto-refreshes on the configured interval:
 
 ```bash
-pnpm run dev
+npm run dev
 ```
 
 ### Web Dashboard
@@ -124,7 +123,7 @@ pnpm run dev
 Next.js web dashboard with real-time WebSocket updates, candlestick charts, and interactive signal panels:
 
 ```bash
-cd web && pnpm install && pnpm dev
+cd web && npm install && npm run dev
 ```
 
 Then open [http://localhost:3000](http://localhost:3000).
@@ -134,13 +133,13 @@ Then open [http://localhost:3000](http://localhost:3000).
 Run the deterministic eval suite (signal quality + risk management):
 
 ```bash
-pnpm run eval
+npm run eval
 ```
 
 Run the LLM judge eval (requires `ANTHROPIC_API_KEY`):
 
 ```bash
-pnpm run eval:judge
+npm run eval:judge
 ```
 
 ## System Prompt
@@ -207,7 +206,7 @@ intervals:
 | UI Components | Radix UI primitives |
 | Real-time Updates | WebSocket (`ws`) |
 | Testing | Vitest |
-| Runtime | Node.js >= 24, pnpm |
+| Runtime | Node.js >= 24 |
 
 ## Disclaimer
 

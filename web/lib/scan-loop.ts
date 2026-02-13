@@ -56,9 +56,6 @@ export function startScanLoop(intervalMs?: number): void {
 
   console.log(`[scan] Starting scan loop with ${interval / 1000}s interval`);
 
-  // Run initial scan
-  performScan();
-
   intervalId = setInterval(() => {
     performScan();
   }, interval);
