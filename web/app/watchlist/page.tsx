@@ -5,6 +5,8 @@ import { useWS } from "@/lib/providers/ws-provider";
 import { AddTickerForm } from "@/components/watchlist/add-ticker-form";
 import { TickerCard } from "@/components/watchlist/ticker-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export default function WatchlistPage() {
   const { config, isLoading, addTicker, removeTicker } = useConfig();
@@ -52,13 +54,11 @@ export default function WatchlistPage() {
                 onRemove={() => removeTicker(ticker, "stocks")}
               />
             ) : (
-              <div
+              <PlaceholderCard
                 key={ticker}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-3"
-              >
-                <span className="font-medium text-sm">{ticker}</span>
-                <div className="text-xs text-[var(--muted-foreground)] mt-1">No data yet</div>
-              </div>
+                ticker={ticker}
+                onRemove={() => removeTicker(ticker, "stocks")}
+              />
             );
           })}
         </div>
@@ -79,17 +79,33 @@ export default function WatchlistPage() {
                 onRemove={() => removeTicker(ticker, "crypto")}
               />
             ) : (
-              <div
+              <PlaceholderCard
                 key={ticker}
-                className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-3"
-              >
-                <span className="font-medium text-sm">{ticker}</span>
-                <div className="text-xs text-[var(--muted-foreground)] mt-1">No data yet</div>
-              </div>
+                ticker={ticker}
+                onRemove={() => removeTicker(ticker, "crypto")}
+              />
             );
           })}
         </div>
       </section>
+    </div>
+  );
+}
+
+function PlaceholderCard({ ticker, onRemove }: { ticker: string; onRemove: () => void }) {
+  return (
+    <div className="relative group rounded-lg border border-[var(--border)] bg-[var(--card)] p-3">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={onRemove}
+        aria-label={`Remove ${ticker}`}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+      <span className="font-medium text-sm">{ticker}</span>
+      <div className="text-xs text-[var(--muted-foreground)] mt-1">No data yet</div>
     </div>
   );
 }
