@@ -10,7 +10,8 @@ export async function POST(
   try {
     const body = await request.json().catch(() => ({})) as { assetType?: string };
     const assetType = (body.assetType ?? "stock") as "stock" | "etf" | "crypto";
-    const result = await analyzeOneTicker(ticker, assetType);
+    const apiKey = request.headers.get("x-api-key") ?? undefined;
+    const result = await analyzeOneTicker(ticker, assetType, apiKey);
 
     return NextResponse.json(result);
   } catch (error) {
