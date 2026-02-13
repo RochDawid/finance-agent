@@ -29,6 +29,7 @@ export interface DashboardState {
   isScanning: boolean;
   scanStage: string | null;
   scanMessage: string | null;
+  scanError: string | null;
   lastScanTime: string | null;
   errors: Array<{ ticker: string; error: string }>;
 }

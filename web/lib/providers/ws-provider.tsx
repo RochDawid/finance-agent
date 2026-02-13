@@ -15,6 +15,7 @@ import type { Signal } from "@finance/types/index.js";
 interface WSContextValue {
   state: DashboardState;
   connected: boolean;
+  hasApiKey: boolean;
   triggerScan: () => void;
 }
 
@@ -27,6 +28,7 @@ const initialState: DashboardState = {
   isScanning: false,
   scanStage: null,
   scanMessage: null,
+  scanError: null,
   lastScanTime: null,
   errors: [],
 };
@@ -34,6 +36,7 @@ const initialState: DashboardState = {
 const WSContext = createContext<WSContextValue>({
   state: initialState,
   connected: false,
+  hasApiKey: false,
   triggerScan: () => {},
 });
 
@@ -51,6 +54,7 @@ function addIdsToSignals(signals: Signal[]): SignalWithId[] {
 export function WSProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DashboardState>(initialState);
   const [connected, setConnected] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -70,7 +74,7 @@ export function WSProvider({ children }: { children: ReactNode }) {
 
         switch (msg.type) {
           case "scan:start":
-            setState((prev) => ({ ...prev, isScanning: true, scanStage: null, scanMessage: null }));
+            setState((prev) => ({ ...prev, isScanning: true, scanStage: null, scanMessage: null, scanError: null }));
             break;
           case "scan:progress": {
             const progress = msg.data as { stage?: string; message?: string };
@@ -111,9 +115,17 @@ export function WSProvider({ children }: { children: ReactNode }) {
             }));
             break;
           }
-          case "scan:error":
-            setState((prev) => ({ ...prev, isScanning: false, scanStage: null, scanMessage: null }));
+          case "scan:error": {
+            const errData = msg.data as { error?: string };
+            setState((prev) => ({
+              ...prev,
+              isScanning: false,
+              scanStage: null,
+              scanMessage: null,
+              scanError: errData.error ?? "An error occurred during the scan.",
+            }));
             break;
+          }
         }
       } catch {
         // ignore parse errors
@@ -129,6 +141,16 @@ export function WSProvider({ children }: { children: ReactNode }) {
     ws.onerror = () => {
       ws.close();
     };
+  }, []);
+
+  useEffect(() => {
+    // Sync hasApiKey from localStorage
+    const syncKey = () => {
+      setHasApiKey(!!localStorage.getItem("anthropic_api_key"));
+    };
+    syncKey();
+    window.addEventListener("storage", syncKey);
+    return () => window.removeEventListener("storage", syncKey);
   }, []);
 
   useEffect(() => {
@@ -160,12 +182,13 @@ export function WSProvider({ children }: { children: ReactNode }) {
 
   const triggerScan = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: "trigger_scan" }));
+      const apiKey = localStorage.getItem("anthropic_api_key") ?? undefined;
+      wsRef.current.send(JSON.stringify({ action: "trigger_scan", apiKey }));
     }
   }, []);
 
   return (
-    <WSContext value={{ state, connected, triggerScan }}>
+    <WSContext value={{ state, connected, hasApiKey, triggerScan }}>
       {children}
     </WSContext>
   );
