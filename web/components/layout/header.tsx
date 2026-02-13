@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Sun, Moon, Scan, Command, HelpCircle } from "lucide-react";
+import { Sun, Moon, Activity, Command, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWS } from "@/lib/providers/ws-provider";
@@ -36,12 +36,12 @@ export function Header({ onOpenCommandPalette, onOpenShortcuts }: HeaderProps) {
               className="h-8 w-8"
               onClick={triggerScan}
               disabled={state.isScanning}
-              aria-label="Trigger scan"
+              aria-label="Run analysis"
             >
-              <Scan className={cn("h-4 w-4", state.isScanning && "animate-spin-slow")} />
+              <Activity className={cn("h-4 w-4", state.isScanning && "animate-spin-slow")} />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Scan now (Cmd+S)</TooltipContent>
+          <TooltipContent>Analyze now (Cmd+S)</TooltipContent>
         </Tooltip>
 
         <Tooltip>

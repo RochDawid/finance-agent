@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useKeyboardShortcuts([
     { key: "k", meta: true, handler: () => setCmdOpen(true), description: "Command palette" },
-    { key: "s", meta: true, handler: () => triggerScan(), description: "Trigger scan" },
+    { key: "s", meta: true, handler: () => triggerScan(), description: "Run analysis" },
     { key: "d", handler: () => router.push("/"), description: "Dashboard" },
     { key: "w", handler: () => router.push("/watchlist"), description: "Watchlist" },
     { key: ",", handler: () => router.push("/settings"), description: "Settings" },
@@ -63,9 +63,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Accessible live region for scan updates */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {state.isScanning
-          ? "Scan in progress"
+          ? "Analysis in progress"
           : state.lastScanTime
-            ? `Scan completed at ${new Date(state.lastScanTime).toLocaleTimeString()}`
+            ? `Analysis completed at ${new Date(state.lastScanTime).toLocaleTimeString()}`
             : ""}
       </div>
     </TooltipProvider>

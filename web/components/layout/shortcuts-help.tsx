@@ -9,7 +9,7 @@ interface ShortcutsHelpProps {
 
 const shortcuts = [
   { keys: ["Cmd", "K"], description: "Command palette" },
-  { keys: ["Cmd", "S"], description: "Trigger scan" },
+  { keys: ["Cmd", "S"], description: "Run analysis" },
   { keys: ["d"], description: "Go to dashboard" },
   { keys: ["w"], description: "Go to watchlist" },
   { keys: [","], description: "Go to settings" },

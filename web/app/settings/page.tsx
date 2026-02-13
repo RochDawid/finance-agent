@@ -74,7 +74,7 @@ export default function SettingsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="risk">Risk</TabsTrigger>
-          <TabsTrigger value="scan">Scan</TabsTrigger>
+          <TabsTrigger value="scan">Analysis</TabsTrigger>
           <TabsTrigger value="api">API Keys</TabsTrigger>
         </TabsList>
 
@@ -130,11 +130,11 @@ export default function SettingsPage() {
         <TabsContent value="scan">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Scan Settings</CardTitle>
+              <CardTitle className="text-sm">Analysis Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <SettingField
-                label="Scan Interval (seconds)"
+                label="Analysis Interval (seconds)"
                 value={draft.intervals.scan}
                 onChange={(v) =>
                   setDraft({

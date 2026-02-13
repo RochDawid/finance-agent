@@ -6,7 +6,7 @@ import { SignalList } from "@/components/signals/signal-list";
 import { ScanStatus } from "@/components/layout/scan-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Scan, TrendingUp, BarChart3, Zap, KeyRound, AlertCircle } from "lucide-react";
+import { Activity, TrendingUp, BarChart3, Zap, KeyRound, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 export function DashboardClient() {
@@ -23,7 +23,7 @@ export function DashboardClient() {
           <TrendingUp className="h-10 w-10 text-[var(--foreground)]" />
         </div>
 
-        <h2 className="text-2xl font-bold tracking-tight mb-3">Ready to scan the market?</h2>
+        <h2 className="text-2xl font-bold tracking-tight mb-3">Ready to analyze the market?</h2>
         <p className="text-[var(--muted-foreground)] max-w-sm mb-8 leading-relaxed">
           Fetch live quotes, run technical analysis on your watchlist, and generate AI-powered
           trading signals — all in one click.
@@ -45,8 +45,8 @@ export function DashboardClient() {
           disabled={!hasApiKey}
           className="gap-2 px-6 font-semibold"
         >
-          <Scan className="h-5 w-5" />
-          Run Market Scan
+          <Activity className="h-5 w-5" />
+          Analyze Watchlist
         </Button>
 
         {hasApiKey && (

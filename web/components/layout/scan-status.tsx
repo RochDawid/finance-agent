@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Scan } from "lucide-react";
+import { Activity, RefreshCw } from "lucide-react";
 
 interface ScanStatusProps {
   isScanning: boolean;
@@ -44,7 +44,7 @@ export function ScanStatus({ isScanning, lastScanTime, scanStage, scanMessage, o
 
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-medium">
-              {scanStage ?? "Scanning"}
+              {scanStage ?? "Analyzing"}
             </span>
             {scanMessage && (
               <span className="text-xs font-mono text-[var(--muted-foreground)]">
@@ -73,7 +73,7 @@ export function ScanStatus({ isScanning, lastScanTime, scanStage, scanMessage, o
     >
       <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
         <span className="h-2 w-2 rounded-full bg-[var(--color-bullish)]" />
-        <span>Last scan</span>
+        <span>Last analysis</span>
         <span className="font-mono">{formatted}</span>
       </div>
       {onScan && (
@@ -83,8 +83,8 @@ export function ScanStatus({ isScanning, lastScanTime, scanStage, scanMessage, o
           onClick={onScan}
           className="gap-1.5 h-7 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
         >
-          <Scan className="h-3.5 w-3.5" />
-          Scan again
+          <RefreshCw className="h-3.5 w-3.5" />
+          Analyze again
         </Button>
       )}
     </div>
