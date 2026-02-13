@@ -7,6 +7,7 @@ import {
   BarChart3,
   List,
   Settings,
+  Clock,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { useState } from "react";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, shortcut: "D" },
   { href: "/watchlist", label: "Watchlist", icon: List, shortcut: "W" },
+  { href: "/history", label: "History", icon: Clock, shortcut: "" },
   { href: "/settings", label: "Settings", icon: Settings, shortcut: "," },
 ];
 
