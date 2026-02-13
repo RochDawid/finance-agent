@@ -143,11 +143,20 @@ export function DashboardClient() {
           <SignalList signals={state.signals} />
         ) : !state.isScanning ? (
           <Card>
-            <CardContent className="py-10 text-center">
-              <p className="text-sm font-medium text-[var(--muted-foreground)] mb-1">No signals generated</p>
-              <p className="text-xs text-[var(--muted-foreground)]">
-                The AI found no setups meeting its risk criteria. Market conditions may not be favorable — try scanning again later.
-              </p>
+            <CardContent className="py-14 flex flex-col items-center text-center gap-4">
+              <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--accent)]">
+                <Activity className="h-7 w-7 text-[var(--muted-foreground)]" />
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-1">No signals this run</p>
+                <p className="text-xs text-[var(--muted-foreground)] max-w-xs leading-relaxed">
+                  The AI reviewed all tickers but found no setups meeting its entry criteria. This is normal — it's better to sit out than force a marginal trade.
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={triggerScan} className="gap-2 mt-1">
+                <Activity className="h-3.5 w-3.5" />
+                Analyze again
+              </Button>
             </CardContent>
           </Card>
         ) : null}
