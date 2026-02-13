@@ -74,7 +74,6 @@ export default function SettingsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="risk">Risk</TabsTrigger>
-          <TabsTrigger value="scan">Analysis</TabsTrigger>
           <TabsTrigger value="api">API Keys</TabsTrigger>
         </TabsList>
 
@@ -127,39 +126,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="scan">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Analysis Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <SettingField
-                label="Analysis Interval (seconds)"
-                value={draft.intervals.scan}
-                onChange={(v) =>
-                  setDraft({
-                    ...draft,
-                    intervals: { ...draft.intervals, scan: v },
-                  })
-                }
-                type="number"
-                step={30}
-              />
-              <SettingField
-                label="Data Refresh (seconds)"
-                value={draft.intervals.dataRefresh}
-                onChange={(v) =>
-                  setDraft({
-                    ...draft,
-                    intervals: { ...draft.intervals, dataRefresh: v },
-                  })
-                }
-                type="number"
-                step={5}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="api">
           <div className="space-y-4">

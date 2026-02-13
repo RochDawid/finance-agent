@@ -9,7 +9,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 import { WebSocketServer, type WebSocket } from "ws";
 import type { WSEventType, WSMessage } from "./lib/types.js";
-import { startScanLoop } from "./lib/scan-loop.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOST ?? "localhost";
@@ -76,10 +75,4 @@ globalThis.__wsBroadcast = (type: WSEventType, data: unknown) => {
 
 server.listen(port, () => {
   console.log(`> Ready on http://${hostname}:${port}`);
-  // Only start auto-scan loop if a server-side API key is configured
-  if (process.env.ANTHROPIC_API_KEY) {
-    startScanLoop();
-  } else {
-    console.log("[scan] No ANTHROPIC_API_KEY — auto-scan disabled. Users provide keys via the UI.");
-  }
 });

@@ -56,23 +56,3 @@ export async function performScan(apiKey?: string): Promise<void> {
   }
 }
 
-let intervalId: ReturnType<typeof setInterval> | null = null;
-
-export function startScanLoop(intervalMs?: number): void {
-  const config = loadConfig();
-  const interval = intervalMs ?? config.intervals.scan * 1000;
-
-  console.log(`[scan] Starting scan loop with ${interval / 1000}s interval`);
-
-  intervalId = setInterval(() => {
-    performScan();
-  }, interval);
-}
-
-export function stopScanLoop(): void {
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
-    console.log("[scan] Scan loop stopped");
-  }
-}
