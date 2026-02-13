@@ -18,6 +18,7 @@ export async function fetchFearGreedIndex(): Promise<FearGreedIndex> {
 
   const data = (await res.json()) as FearGreedResponse;
   const latest = data.data[0];
+  if (!latest) throw new Error("Fear & Greed API returned no data");
 
   return {
     value: parseInt(latest.value, 10),
