@@ -17,7 +17,7 @@ import { useState } from "react";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, shortcut: "D" },
   { href: "/watchlist", label: "Watchlist", icon: List, shortcut: "W" },
-  { href: "/settings", label: "Settings", icon: Settings, shortcut: "" },
+  { href: "/settings", label: "Settings", icon: Settings, shortcut: "," },
 ];
 
 export function Sidebar() {
