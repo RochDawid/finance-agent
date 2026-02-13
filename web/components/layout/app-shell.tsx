@@ -25,6 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { key: "a", meta: true, handler: () => triggerScan(), description: "Run analysis" },
     { key: "d", handler: () => router.push("/"), description: "Dashboard" },
     { key: "w", handler: () => router.push("/watchlist"), description: "Watchlist" },
+    { key: "h", handler: () => router.push("/history"), description: "History" },
     { key: ",", handler: () => router.push("/settings"), description: "Settings" },
     { key: "?", handler: () => setShortcutsOpen(true), description: "Shortcuts help" },
     { key: "t", handler: () => setTheme(theme === "dark" ? "light" : "dark"), description: "Toggle theme" },

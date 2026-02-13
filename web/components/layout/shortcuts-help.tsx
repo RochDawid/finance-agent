@@ -12,6 +12,7 @@ const shortcuts = [
   { keys: ["Cmd", "A"], description: "Run analysis" },
   { keys: ["d"], description: "Go to dashboard" },
   { keys: ["w"], description: "Go to watchlist" },
+  { keys: ["h"], description: "Go to history" },
   { keys: [","], description: "Go to settings" },
   { keys: ["Escape"], description: "Close dialog" },
   { keys: ["?"], description: "This help" },
