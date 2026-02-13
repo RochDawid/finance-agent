@@ -43,9 +43,9 @@ wss.on("connection", (ws) => {
 
   ws.on("message", (raw) => {
     try {
-      const msg = JSON.parse(raw.toString()) as { action?: string };
+      const msg = JSON.parse(raw.toString()) as { action?: string; apiKey?: string };
       if (msg.action === "trigger_scan") {
-        import("./lib/scan-loop.js").then((m) => m.performScan());
+        import("./lib/scan-loop.js").then((m) => m.performScan(msg.apiKey));
       }
     } catch {
       // ignore malformed messages
@@ -76,5 +76,10 @@ globalThis.__wsBroadcast = (type: WSEventType, data: unknown) => {
 
 server.listen(port, () => {
   console.log(`> Ready on http://${hostname}:${port}`);
-  startScanLoop();
+  // Only start auto-scan loop if a server-side API key is configured
+  if (process.env.ANTHROPIC_API_KEY) {
+    startScanLoop();
+  } else {
+    console.log("[scan] No ANTHROPIC_API_KEY — auto-scan disabled. Users provide keys via the UI.");
+  }
 });
