@@ -24,10 +24,10 @@ export async function performScan(apiKey?: string): Promise<void> {
     const config = loadConfig();
     const { stocks, crypto } = config.watchlist;
 
-    broadcast("scan:progress", { stage: "fetching", message: "Fetching market data..." });
+    broadcast("scan:progress", { stage: "Fetching market data", message: `Loading quotes for ${stocks.length + crypto.length} tickers...` });
     const scanResult = await scanWatchlist(stocks, crypto);
 
-    broadcast("scan:progress", { stage: "analyzing", message: "Running AI analysis..." });
+    broadcast("scan:progress", { stage: "Running AI analysis", message: "Claude is analyzing the watchlist — this may take a minute..." });
     // Never log the apiKey
     const agentResponse = await runAgent(scanResult.reports, effectiveKey);
 

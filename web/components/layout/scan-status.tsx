@@ -46,8 +46,8 @@ export function ScanStatus({ isScanning, lastScanTime, scanStage, scanMessage, o
             <span className="text-sm font-medium">
               {scanStage ?? "Analyzing"}
             </span>
-            {scanMessage && (
-              <span className="text-xs font-mono text-[var(--muted-foreground)]">
+            {scanMessage && scanMessage !== scanStage && (
+              <span className="text-xs text-[var(--muted-foreground)]">
                 {scanMessage}
               </span>
             )}
