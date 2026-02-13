@@ -4,6 +4,7 @@ import { useConfig } from "@/lib/providers/config-provider";
 import { useWS } from "@/lib/providers/ws-provider";
 import { AddTickerForm } from "@/components/watchlist/add-ticker-form";
 import { TickerCard } from "@/components/watchlist/ticker-card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
@@ -20,6 +21,8 @@ export default function WatchlistPage() {
       </div>
     );
   }
+
+  const { isScanning } = state;
 
   const getQuote = (ticker: string) =>
     state.reports.find((r) => r.ticker === ticker)?.quote;
@@ -47,19 +50,9 @@ export default function WatchlistPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {config.watchlist.stocks.map((ticker) => {
             const quote = getQuote(ticker);
-            return quote ? (
-              <TickerCard
-                key={ticker}
-                quote={quote}
-                onRemove={() => removeTicker(ticker, "stocks")}
-              />
-            ) : (
-              <PlaceholderCard
-                key={ticker}
-                ticker={ticker}
-                onRemove={() => removeTicker(ticker, "stocks")}
-              />
-            );
+            if (quote) return <TickerCard key={ticker} quote={quote} onRemove={() => removeTicker(ticker, "stocks")} />;
+            if (isScanning) return <SkeletonCard key={ticker} />;
+            return <PlaceholderCard key={ticker} ticker={ticker} onRemove={() => removeTicker(ticker, "stocks")} />;
           })}
         </div>
       </section>
@@ -72,23 +65,28 @@ export default function WatchlistPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {config.watchlist.crypto.map((ticker) => {
             const quote = getQuote(ticker);
-            return quote ? (
-              <TickerCard
-                key={ticker}
-                quote={quote}
-                onRemove={() => removeTicker(ticker, "crypto")}
-              />
-            ) : (
-              <PlaceholderCard
-                key={ticker}
-                ticker={ticker}
-                onRemove={() => removeTicker(ticker, "crypto")}
-              />
-            );
+            if (quote) return <TickerCard key={ticker} quote={quote} onRemove={() => removeTicker(ticker, "crypto")} />;
+            if (isScanning) return <SkeletonCard key={ticker} />;
+            return <PlaceholderCard key={ticker} ticker={ticker} onRemove={() => removeTicker(ticker, "crypto")} />;
           })}
         </div>
       </section>
     </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <Card>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-12" />
+          <Skeleton className="h-3 w-8" />
+        </div>
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-3 w-16" />
+      </CardContent>
+    </Card>
   );
 }
 
