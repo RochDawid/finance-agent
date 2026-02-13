@@ -6,10 +6,12 @@ import { SignalList } from "@/components/signals/signal-list";
 import { ScanStatus } from "@/components/layout/scan-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Scan, TrendingUp, BarChart3, Zap } from "lucide-react";
+import { Scan, TrendingUp, BarChart3, Zap, KeyRound, AlertCircle } from "lucide-react";
+import Link from "next/link";
 
 export function DashboardClient() {
-  const { state, triggerScan } = useWS();
+  const { state, triggerScan, hasApiKey } = useWS();
+  const { scanError } = state;
 
   const hasData = state.signals.length > 0 || state.marketCondition !== null;
 
@@ -27,21 +29,34 @@ export function DashboardClient() {
           trading signals — all in one click.
         </p>
 
+        {!hasApiKey && (
+          <Link
+            href="/settings?tab=api"
+            className="flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-500/20 transition-colors"
+          >
+            <KeyRound className="h-4 w-4 shrink-0" />
+            Add your Anthropic API key in Settings → API Keys to run scans
+          </Link>
+        )}
+
         <Button
           size="lg"
           onClick={triggerScan}
+          disabled={!hasApiKey}
           className="gap-2 px-6 font-semibold"
         >
           <Scan className="h-5 w-5" />
           Run Market Scan
         </Button>
 
-        <p className="mt-4 text-xs text-[var(--muted-foreground)]">
-          or press{" "}
-          <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Ctrl+S</kbd>
-          {" "}·{" "}
-          <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Cmd+S</kbd>
-        </p>
+        {hasApiKey && (
+          <p className="mt-4 text-xs text-[var(--muted-foreground)]">
+            or press{" "}
+            <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Ctrl+S</kbd>
+            {" "}·{" "}
+            <kbd className="rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-xs">Cmd+S</kbd>
+          </p>
+        )}
 
         <div className="mt-16 grid grid-cols-3 gap-6 max-w-lg w-full text-left">
           {[
@@ -64,6 +79,19 @@ export function DashboardClient() {
 
   return (
     <div className="space-y-6">
+      {/* Scan error banner */}
+      {scanError && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400 text-sm">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>{scanError}</span>
+          {scanError.includes("API key") && (
+            <Link href="/settings?tab=api" className="ml-auto font-medium underline underline-offset-2 whitespace-nowrap">
+              Add key →
+            </Link>
+          )}
+        </div>
+      )}
+
       {/* Scan status — shows progress or last scan time */}
       <ScanStatus
         isScanning={state.isScanning}
@@ -108,8 +136,11 @@ export function DashboardClient() {
           <SignalList signals={state.signals} />
         ) : !state.isScanning ? (
           <Card>
-            <CardContent className="py-8 text-center text-[var(--muted-foreground)] text-sm">
-              No signals generated. Try running another scan.
+            <CardContent className="py-10 text-center">
+              <p className="text-sm font-medium text-[var(--muted-foreground)] mb-1">No signals generated</p>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                The AI found no setups meeting its risk criteria. Market conditions may not be favorable — try scanning again later.
+              </p>
             </CardContent>
           </Card>
         ) : null}
