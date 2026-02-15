@@ -25,8 +25,10 @@ export default function AnalysisPage() {
   const ticker = params.ticker as string;
   const [timeframe, setTimeframe] = useState<Timeframe>("1d");
 
+  const assetType = ticker === ticker.toLowerCase() ? "crypto" : "stock";
+
   const { data, isLoading } = useTickerData(ticker);
-  const { data: ohlcv, isLoading: chartLoading } = useOHLCV(ticker, timeframe);
+  const { data: ohlcv, isLoading: chartLoading } = useOHLCV(ticker, timeframe, assetType);
 
   return (
     <div className="space-y-6">
