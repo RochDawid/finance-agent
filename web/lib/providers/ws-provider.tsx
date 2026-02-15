@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { WSMessage, DashboardState, SignalWithId } from "../types";
 import type { Signal } from "@finance/types/index.js";
+import { useConfig } from "./config-provider";
 
 interface WSContextValue {
   state: DashboardState;
@@ -51,7 +52,15 @@ function addIdsToSignals(signals: Signal[]): SignalWithId[] {
   }));
 }
 
+/** Returns the localStorage key name for the given provider */
+function storageKeyFor(provider: string): string {
+  return `${provider}_api_key`;
+}
+
 export function WSProvider({ children }: { children: ReactNode }) {
+  const { config } = useConfig();
+  const provider = config?.model?.provider ?? "anthropic";
+
   const [state, setState] = useState<DashboardState>(initialState);
   const [connected, setConnected] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(false);
@@ -144,14 +153,14 @@ export function WSProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Sync hasApiKey from localStorage
+    // Sync hasApiKey from localStorage whenever provider or storage changes
     const syncKey = () => {
-      setHasApiKey(!!localStorage.getItem("anthropic_api_key"));
+      setHasApiKey(!!localStorage.getItem(storageKeyFor(provider)));
     };
     syncKey();
     window.addEventListener("storage", syncKey);
     return () => window.removeEventListener("storage", syncKey);
-  }, []);
+  }, [provider]);
 
   useEffect(() => {
     // Load initial cached data
@@ -182,10 +191,10 @@ export function WSProvider({ children }: { children: ReactNode }) {
 
   const triggerScan = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      const apiKey = localStorage.getItem("anthropic_api_key") ?? undefined;
+      const apiKey = localStorage.getItem(storageKeyFor(provider)) ?? undefined;
       wsRef.current.send(JSON.stringify({ action: "trigger_scan", apiKey }));
     }
-  }, []);
+  }, [provider]);
 
   return (
     <WSContext value={{ state, connected, hasApiKey, triggerScan }}>

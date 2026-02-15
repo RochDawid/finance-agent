@@ -37,11 +37,11 @@ export default function RootLayout({
         </a>
         <ThemeProvider>
           <QueryProvider>
-            <WSProvider>
-              <ConfigProvider>
+            <ConfigProvider>
+              <WSProvider>
                 <AppShell>{children}</AppShell>
-              </ConfigProvider>
-            </WSProvider>
+              </WSProvider>
+            </ConfigProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

@@ -12,6 +12,12 @@ import { Activity, TrendingUp, BarChart3, Zap, KeyRound, AlertCircle } from "luc
 import Link from "next/link";
 import { cn, formatPrice, formatPercent } from "@/lib/utils";
 
+const PROVIDER_LABELS: Record<string, string> = {
+  anthropic: "Anthropic",
+  openai: "OpenAI",
+  google: "Google",
+};
+
 export function DashboardClient() {
   const { state, triggerScan, hasApiKey } = useWS();
   const { config } = useConfig();
@@ -46,7 +52,7 @@ export function DashboardClient() {
             className="flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-500/20 transition-colors"
           >
             <KeyRound className="h-4 w-4 shrink-0" />
-            Add your Anthropic API key in Settings → API Keys to run scans
+            Add your {config?.model?.provider ? PROVIDER_LABELS[config.model.provider] ?? config.model.provider : "AI"} API key in Settings → API Keys to run scans
           </Link>
         )}
 

@@ -4,16 +4,34 @@ import { loadConfig } from "@finance/config.js";
 import { broadcast } from "./ws-server.js";
 import { setScanCache, isScanning, setScanning } from "./scan-cache.js";
 
+const PROVIDER_ENV_KEYS: Record<string, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
+  google: "GOOGLE_API_KEY",
+};
+
+const PROVIDER_DISPLAY: Record<string, string> = {
+  anthropic: "Claude",
+  openai: "GPT",
+  google: "Gemini",
+};
+
 export async function performScan(apiKey?: string): Promise<void> {
   if (isScanning()) {
     console.log("[scan] Scan already in progress, skipping");
     return;
   }
 
+  const config = loadConfig();
+  const { provider } = config.model;
+
   // Require an API key (user-provided or server env var)
-  const effectiveKey = apiKey ?? process.env.ANTHROPIC_API_KEY;
+  const envKey = PROVIDER_ENV_KEYS[provider];
+  const effectiveKey = apiKey ?? (envKey ? process.env[envKey] : undefined);
   if (!effectiveKey) {
-    broadcast("scan:error", { error: "No API key configured. Add yours in Settings → API Keys." });
+    broadcast("scan:error", {
+      error: `No API key configured for ${provider}. Add yours in Settings → API Keys.`,
+    });
     return;
   }
 
@@ -21,13 +39,19 @@ export async function performScan(apiKey?: string): Promise<void> {
   broadcast("scan:start", {});
 
   try {
-    const config = loadConfig();
     const { stocks, crypto } = config.watchlist;
+    const modelLabel = PROVIDER_DISPLAY[provider] ?? provider;
 
-    broadcast("scan:progress", { stage: "Fetching market data", message: `Loading quotes for ${stocks.length + crypto.length} tickers...` });
+    broadcast("scan:progress", {
+      stage: "Fetching market data",
+      message: `Loading quotes for ${stocks.length + crypto.length} tickers...`,
+    });
     const scanResult = await scanWatchlist(stocks, crypto);
 
-    broadcast("scan:progress", { stage: "Running AI analysis", message: "Claude is analyzing the watchlist — this may take a minute..." });
+    broadcast("scan:progress", {
+      stage: "Running AI analysis",
+      message: `${modelLabel} is analyzing the watchlist — this may take a minute...`,
+    });
     // Never log the apiKey
     const agentResponse = await runAgent(scanResult.reports, effectiveKey);
 
@@ -55,4 +79,3 @@ export async function performScan(apiKey?: string): Promise<void> {
     setScanning(false);
   }
 }
-
