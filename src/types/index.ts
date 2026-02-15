@@ -227,6 +227,13 @@ export interface RiskParams {
   maxCorrelatedPositions?: number;
 }
 
+export type ModelProvider = "anthropic" | "openai" | "google";
+
+export interface ModelConfig {
+  provider: ModelProvider;
+  name: string;
+}
+
 export interface AppConfig {
   watchlist: {
     stocks: string[];
@@ -237,6 +244,7 @@ export interface AppConfig {
     scan: number;
     dataRefresh: number;
   };
+  model: ModelConfig;
   apiKeys: {
     alphaVantage?: string;
     coinGecko?: string;

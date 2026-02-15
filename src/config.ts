@@ -58,6 +58,7 @@ export function loadConfig(configPath?: string): AppConfig {
           watchlist: { stocks: [], crypto: [] },
           risk: { maxRiskPerTrade: 0.01, minRiskReward: 2, portfolioSize: 10000 },
           intervals: { scan: 3600, dataRefresh: 900 },
+          model: { provider: "anthropic" as const, name: "claude-opus-4-6" },
         };
 
         // 2. Merge defaults with parsed config
@@ -66,6 +67,7 @@ export function loadConfig(configPath?: string): AppConfig {
           watchlist: { ...defaults.watchlist, ...(parsed.watchlist ?? {}) },
           risk: { ...defaults.risk, ...(parsed.risk ?? {}) },
           intervals: { ...defaults.intervals, ...(parsed.intervals ?? {}) },
+          model: { ...defaults.model, ...(parsed.model ?? {}) },
           apiKeys: mergedApiKeys,
         };
 
