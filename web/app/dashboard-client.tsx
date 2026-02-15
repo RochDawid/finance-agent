@@ -1,10 +1,12 @@
 "use client";
 
 import { useWS } from "@/lib/providers/ws-provider";
+import { useConfig } from "@/lib/providers/config-provider";
 import { MarketOverview } from "@/components/market/market-overview";
 import { SignalList } from "@/components/signals/signal-list";
 import { ScanStatus } from "@/components/layout/scan-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Activity, TrendingUp, BarChart3, Zap, KeyRound, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -12,6 +14,7 @@ import { cn, formatPrice, formatPercent } from "@/lib/utils";
 
 export function DashboardClient() {
   const { state, triggerScan, hasApiKey } = useWS();
+  const { config } = useConfig();
   const { scanError } = state;
 
   const hasData = state.signals.length > 0 || state.marketCondition !== null;
@@ -117,35 +120,74 @@ export function DashboardClient() {
       )}
 
       {/* Watchlist prices */}
-      {state.reports.length > 0 && (
+      {(state.reports.length > 0 || state.isScanning) && (
         <section aria-label="Watchlist prices">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
-            {state.reports.map((report) => {
-              const { quote } = report;
-              const positive = quote.changePercent >= 0;
-              return (
-                <Link
-                  key={report.ticker}
-                  href={`/analysis/${report.ticker}`}
-                  className="flex flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 hover:bg-[var(--accent)] transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-xs font-medium truncate">{report.ticker}</span>
-                    <span
-                      className={cn(
-                        "text-[10px] font-mono font-medium shrink-0",
-                        positive ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
-                      )}
+            {state.isScanning && config
+              ? [...config.watchlist.stocks, ...config.watchlist.crypto].map((ticker) => {
+                  const report = state.reports.find((r) => r.ticker === ticker);
+                  if (report) {
+                    const { quote } = report;
+                    const positive = quote.changePercent >= 0;
+                    return (
+                      <Link
+                        key={ticker}
+                        href={`/analysis/${ticker}`}
+                        className="flex flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 hover:bg-[var(--accent)] transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-medium truncate">{ticker}</span>
+                          <span
+                            className={cn(
+                              "text-[10px] font-mono font-medium shrink-0",
+                              positive ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
+                            )}
+                          >
+                            {positive ? "+" : ""}{formatPercent(quote.changePercent)}
+                          </span>
+                        </div>
+                        <span className="text-xs font-mono text-[var(--muted-foreground)]">
+                          ${formatPrice(quote.price)}
+                        </span>
+                      </Link>
+                    );
+                  }
+                  return (
+                    <div key={ticker} className="flex flex-col gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-medium truncate text-[var(--muted-foreground)]">{ticker}</span>
+                        <Skeleton className="h-2.5 w-10 shrink-0" />
+                      </div>
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  );
+                })
+              : state.reports.map((report) => {
+                  const { quote } = report;
+                  const positive = quote.changePercent >= 0;
+                  return (
+                    <Link
+                      key={report.ticker}
+                      href={`/analysis/${report.ticker}`}
+                      className="flex flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 hover:bg-[var(--accent)] transition-colors"
                     >
-                      {positive ? "+" : ""}{formatPercent(quote.changePercent)}
-                    </span>
-                  </div>
-                  <span className="text-xs font-mono text-[var(--muted-foreground)]">
-                    ${formatPrice(quote.price)}
-                  </span>
-                </Link>
-              );
-            })}
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-medium truncate">{report.ticker}</span>
+                        <span
+                          className={cn(
+                            "text-[10px] font-mono font-medium shrink-0",
+                            positive ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
+                          )}
+                        >
+                          {positive ? "+" : ""}{formatPercent(quote.changePercent)}
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono text-[var(--muted-foreground)]">
+                        ${formatPrice(quote.price)}
+                      </span>
+                    </Link>
+                  );
+                })}
           </div>
         </section>
       )}
