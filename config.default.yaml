@@ -2,7 +2,6 @@ watchlist:
   stocks:
     - TSLA
     - NVDA
-    - EDR.MC
   crypto:
     - bitcoin
     - ethereum
