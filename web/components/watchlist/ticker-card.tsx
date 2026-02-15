@@ -10,11 +10,12 @@ import { useQuote } from "@/hooks/use-quote";
 
 interface TickerCardProps {
   ticker: string;
+  assetType: "stock" | "crypto";
   onRemove?: () => void;
 }
 
-export function TickerCard({ ticker, onRemove }: TickerCardProps) {
-  const { quote, isLoading, refresh } = useQuote(ticker);
+export function TickerCard({ ticker, assetType, onRemove }: TickerCardProps) {
+  const { quote, isLoading, refresh } = useQuote(ticker, assetType);
 
   return (
     <Card className="relative group">
@@ -50,16 +51,13 @@ export function TickerCard({ ticker, onRemove }: TickerCardProps) {
 
       <Link href={`/analysis/${ticker}`} className="block cursor-pointer">
         <CardContent className="p-3 hover:bg-[var(--accent)] transition-colors rounded-[inherit]">
-          <div className="flex items-center justify-between mb-1">
+          <div className="mb-1">
             <span className="font-medium text-sm">{ticker}</span>
-            {quote && (
-              <span className="text-[10px] text-[var(--muted-foreground)] uppercase">{quote.assetType}</span>
-            )}
           </div>
           {isLoading ? (
             <div className="space-y-1.5 mt-1">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-4 w-20 bg-[var(--foreground)]/15" />
+              <Skeleton className="h-3 w-14 bg-[var(--foreground)]/10" />
             </div>
           ) : quote ? (
             <PriceDisplay

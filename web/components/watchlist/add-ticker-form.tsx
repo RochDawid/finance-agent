@@ -17,7 +17,8 @@ export function AddTickerForm({ onAdd }: AddTickerFormProps) {
     e.preventDefault();
     const trimmed = ticker.trim();
     if (!trimmed) return;
-    onAdd(trimmed, type);
+    const normalized = type === "crypto" ? trimmed.toLowerCase() : trimmed.toUpperCase();
+    onAdd(normalized, type);
     setTicker("");
   };
 

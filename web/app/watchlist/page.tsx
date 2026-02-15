@@ -30,7 +30,7 @@ export default function WatchlistPage() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {config.watchlist.stocks.map((ticker) => (
-            <TickerCard key={ticker} ticker={ticker} onRemove={() => removeTicker(ticker, "stocks")} />
+            <TickerCard key={ticker} ticker={ticker} assetType="stock" onRemove={() => removeTicker(ticker, "stocks")} />
           ))}
         </div>
       </section>
@@ -41,7 +41,7 @@ export default function WatchlistPage() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {config.watchlist.crypto.map((ticker) => (
-            <TickerCard key={ticker} ticker={ticker} onRemove={() => removeTicker(ticker, "crypto")} />
+            <TickerCard key={ticker} ticker={ticker} assetType="crypto" onRemove={() => removeTicker(ticker, "crypto")} />
           ))}
         </div>
       </section>

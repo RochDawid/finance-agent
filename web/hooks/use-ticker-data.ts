@@ -13,14 +13,9 @@ interface TickerData {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-function inferType(ticker: string): "stock" | "crypto" {
-  return ticker === ticker.toLowerCase() ? "crypto" : "stock";
-}
-
-export function useTickerData(ticker: string | null) {
-  const type = ticker ? inferType(ticker) : "stock";
+export function useTickerData(ticker: string | null, assetType: "stock" | "crypto" = "stock") {
   const { data, error, isLoading, mutate } = useSWR<TickerData>(
-    ticker ? `/api/ticker/${ticker}?type=${type}` : null,
+    ticker ? `/api/ticker/${ticker}?type=${assetType}` : null,
     fetcher,
     { refreshInterval: 30_000 },
   );

@@ -17,6 +17,7 @@ import { FibonacciDisplay } from "@/components/data/fibonacci-display";
 import { PivotDisplay } from "@/components/data/pivot-display";
 import { useTickerData } from "@/hooks/use-ticker-data";
 import { useOHLCV } from "@/hooks/use-ohlcv";
+import { useConfig } from "@/lib/providers/config-provider";
 import type { Timeframe } from "@finance/types/index.js";
 
 export default function AnalysisPage() {
@@ -25,9 +26,10 @@ export default function AnalysisPage() {
   const ticker = params.ticker as string;
   const [timeframe, setTimeframe] = useState<Timeframe>("1d");
 
-  const assetType = ticker === ticker.toLowerCase() ? "crypto" : "stock";
+  const { config } = useConfig();
+  const assetType = config?.watchlist.crypto.includes(ticker) ? "crypto" : "stock";
 
-  const { data, isLoading } = useTickerData(ticker);
+  const { data, isLoading } = useTickerData(ticker, assetType);
   const { data: ohlcv, isLoading: chartLoading } = useOHLCV(ticker, timeframe, assetType);
 
   return (
