@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SignalDetailPanel } from "@/components/signals/signal-detail-panel";
@@ -47,9 +48,16 @@ export default function SignalDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => router.back()}>
-        <ArrowLeft className="h-4 w-4 mr-1" /> Back
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/analysis/${signal.ticker}`}>
+            <BarChart3 className="h-4 w-4 mr-1" /> Analysis
+          </Link>
+        </Button>
+      </div>
 
       {ohlcv && ohlcv.length > 0 ? (
         <ChartWrapper data={ohlcv} overlays={overlays} height={400} />

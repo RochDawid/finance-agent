@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BiasBadge } from "@/components/data/bias-badge";
@@ -18,24 +19,24 @@ interface SignalCardProps {
 }
 
 export function SignalCard({ signal, index, selected, className }: SignalCardProps) {
+  const router = useRouter();
   return (
-    <Link href={`/signals/${signal.id}`} className="block">
-      <Card
-        className={cn(
-          "transition-all duration-200 hover:shadow-md hover:border-[var(--ring)]",
-          selected && "border-[var(--ring)] ring-1 ring-[var(--ring)]",
-          className,
-        )}
-      >
-        <CardHeader className="pb-2">
-          <SignalCardHeader signal={signal} index={index} />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <SignalCardLevels signal={signal} />
-          <SignalCardMetrics signal={signal} />
-        </CardContent>
-      </Card>
-    </Link>
+    <Card
+      onClick={() => router.push(`/signals/${signal.id}`)}
+      className={cn(
+        "transition-all duration-200 hover:shadow-md hover:border-[var(--ring)] cursor-pointer",
+        selected && "border-[var(--ring)] ring-1 ring-[var(--ring)]",
+        className,
+      )}
+    >
+      <CardHeader className="pb-2">
+        <SignalCardHeader signal={signal} index={index} />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <SignalCardLevels signal={signal} />
+        <SignalCardMetrics signal={signal} />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -46,7 +47,13 @@ function SignalCardHeader({ signal, index }: { signal: SignalWithId; index?: num
         {index !== undefined && (
           <span className="text-xs text-[var(--muted-foreground)] font-mono w-4">{index + 1}</span>
         )}
-        <CardTitle className="text-lg font-semibold tracking-tight">{signal.ticker}</CardTitle>
+        <Link
+          href={`/analysis/${signal.ticker}`}
+          onClick={(e) => e.stopPropagation()}
+          className="hover:underline underline-offset-2"
+        >
+          <CardTitle className="text-lg font-semibold tracking-tight">{signal.ticker}</CardTitle>
+        </Link>
         <Badge variant={signal.direction === "long" ? "bullish" : "bearish"} className="uppercase text-[10px] ml-1">
           {signal.direction}
         </Badge>

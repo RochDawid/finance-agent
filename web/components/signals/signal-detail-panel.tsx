@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PriceDisplay } from "@/components/data/price-display";
@@ -18,7 +19,9 @@ export function SignalDetailPanel({ signal }: SignalDetailPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{signal.ticker}</h1>
+          <Link href={`/analysis/${signal.ticker}`} className="hover:underline underline-offset-2">
+            <h1 className="text-2xl font-bold">{signal.ticker}</h1>
+          </Link>
           <Badge variant={signal.direction === "long" ? "bullish" : "bearish"} className="uppercase">
             {signal.direction}
           </Badge>
