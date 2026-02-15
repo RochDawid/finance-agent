@@ -1,4 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { generateText } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import type { EvalScore, Signal } from "../../types/index.js";
 import { computeEvalScore } from "../helpers.js";
 
@@ -49,24 +50,15 @@ Return ONLY a JSON object with this exact structure:
 }`;
 
 export async function judgeSignal(signal: Signal): Promise<EvalScore> {
-  const client = new Anthropic();
+  const anthropic = createAnthropic();
+  const model = anthropic("claude-opus-4-6");
 
-  const response = await client.messages.create({
-    model: "claude-opus-4-6",
-    max_tokens: 500,
+  const { text } = await generateText({
+    model,
     system: JUDGE_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: `Evaluate this trading signal:\n\n${JSON.stringify(signal, null, 2)}`,
-      },
-    ],
+    prompt: `Evaluate this trading signal:\n\n${JSON.stringify(signal, null, 2)}`,
+    maxOutputTokens: 500,
   });
-
-  const text = response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("");
 
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);

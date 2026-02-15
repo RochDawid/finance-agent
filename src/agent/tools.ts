@@ -1,5 +1,5 @@
-import { createSdkMcpServer, tool } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod/v4";
+import { tool } from "ai";
+import { z } from "zod";
 
 import { computeTechnicalAnalysis } from "../analysis/indicators.js";
 import { computeLevelAnalysis } from "../analysis/levels.js";
@@ -10,22 +10,24 @@ import { fetchSentimentData, getSentimentSummary } from "../data/sentiment.js";
 import { fetchOHLCV, fetchQuote } from "../data/yahoo.js";
 import type { AssetType, OHLCV, Quote, Timeframe } from "../types/index.js";
 
-const getStockData = tool(
-  "get_stock_data",
-  "Fetch OHLCV price data for a stock or ETF at a given timeframe. Returns open, high, low, close, volume bars.",
-  {
-    ticker: z.string().describe("Stock/ETF ticker symbol, e.g. AAPL, SPY"),
-    timeframe: z
-      .enum(["1m", "5m", "15m", "1h", "4h", "1d"])
-      .default("1d")
-      .describe("Candle timeframe"),
-  },
-  async (args) => {
-    try {
-      const data = await fetchOHLCV(args.ticker, args.timeframe as Timeframe);
-      const quote = await fetchQuote(args.ticker);
-      const summary = {
-        ticker: args.ticker,
+export const tradingTools = {
+  get_stock_data: tool({
+    description:
+      "Fetch OHLCV price data for a stock or ETF at a given timeframe. Returns open, high, low, close, volume bars plus current quote.",
+    inputSchema: z.object({
+      ticker: z.string().describe("Stock/ETF ticker symbol, e.g. AAPL, SPY"),
+      timeframe: z
+        .enum(["1m", "5m", "15m", "1h", "4h", "1d"])
+        .default("1d")
+        .describe("Candle timeframe"),
+    }),
+    execute: async ({ ticker, timeframe }) => {
+      const [data, quote] = await Promise.all([
+        fetchOHLCV(ticker, timeframe as Timeframe),
+        fetchQuote(ticker),
+      ]);
+      return {
+        ticker,
         currentPrice: quote.price,
         change: quote.changePercent.toFixed(2) + "%",
         volume: quote.volume,
@@ -41,32 +43,28 @@ const getStockData = tool(
           V: d.volume,
         })),
       };
-      return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }] };
-    } catch (err) {
-      return {
-        content: [{ type: "text", text: `Error fetching stock data: ${err}` }],
-        isError: true,
-      };
-    }
-  },
-  { annotations: { readOnly: true, openWorld: true } },
-);
+    },
+  }),
 
-const getCryptoData = tool(
-  "get_crypto_data",
-  "Fetch cryptocurrency price, volume, and OHLC data. Uses CoinGecko API.",
-  {
-    coinId: z.string().describe("CoinGecko coin ID, e.g. bitcoin, ethereum, solana"),
-    days: z.number().default(30).describe("Number of days of historical data"),
-  },
-  async (args) => {
-    try {
+  get_crypto_data: tool({
+    description:
+      "Fetch cryptocurrency price, volume, and OHLC data from CoinGecko.",
+    inputSchema: z.object({
+      coinId: z
+        .string()
+        .describe("CoinGecko coin ID, e.g. bitcoin, ethereum, solana"),
+      days: z
+        .number()
+        .default(30)
+        .describe("Number of days of historical data (max 30)"),
+    }),
+    execute: async ({ coinId, days }) => {
       const [quote, ohlc] = await Promise.all([
-        fetchCryptoPrice(args.coinId),
-        fetchCryptoOHLC(args.coinId, Math.min(args.days, 30) as 1 | 7 | 14 | 30),
+        fetchCryptoPrice(coinId),
+        fetchCryptoOHLC(coinId, Math.min(days, 30) as 1 | 7 | 14 | 30),
       ]);
-      const summary = {
-        coinId: args.coinId,
+      return {
+        coinId,
         currentPrice: quote.price,
         change24h: quote.changePercent.toFixed(2) + "%",
         volume24h: quote.volume,
@@ -80,66 +78,50 @@ const getCryptoData = tool(
           C: d.close.toFixed(2),
         })),
       };
-      return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }] };
-    } catch (err) {
-      return {
-        content: [{ type: "text", text: `Error fetching crypto data: ${err}` }],
-        isError: true,
-      };
-    }
-  },
-  { annotations: { readOnly: true, openWorld: true } },
-);
+    },
+  }),
 
-const analyzeTechnicals = tool(
-  "analyze_technicals",
-  "Run full technical analysis on a ticker: trend (EMA, MACD, ADX), momentum (RSI, Stochastic, CCI), volatility (BB, ATR, Keltner), and volume (OBV, VWAP, CMF). Returns structured analysis with bias interpretations.",
-  {
-    ticker: z.string().describe("Ticker symbol or CoinGecko coin ID"),
-    timeframe: z
-      .enum(["1m", "5m", "15m", "1h", "4h", "1d"])
-      .default("1d")
-      .describe("Analysis timeframe"),
-    assetType: z
-      .enum(["stock", "etf", "crypto"])
-      .default("stock")
-      .describe("Type of asset"),
-  },
-  async (args) => {
-    try {
+  analyze_technicals: tool({
+    description:
+      "Run full technical analysis on a ticker: trend (EMA, MACD, ADX), momentum (RSI, Stochastic, CCI), volatility (BB, ATR, Keltner), and volume (OBV, VWAP, CMF). Returns structured analysis with bias interpretations.",
+    inputSchema: z.object({
+      ticker: z.string().describe("Ticker symbol or CoinGecko coin ID"),
+      timeframe: z
+        .enum(["1m", "5m", "15m", "1h", "4h", "1d"])
+        .default("1d")
+        .describe("Analysis timeframe"),
+      assetType: z
+        .enum(["stock", "etf", "crypto"])
+        .default("stock")
+        .describe("Type of asset"),
+    }),
+    execute: async ({ ticker, timeframe, assetType }) => {
       let data: OHLCV[];
       let quote: Quote;
 
-      if (args.assetType === "crypto") {
+      if (assetType === "crypto") {
         [quote, data] = await Promise.all([
-          fetchCryptoPrice(args.ticker),
-          fetchCryptoOHLC(args.ticker, 30),
+          fetchCryptoPrice(ticker),
+          fetchCryptoOHLC(ticker, 30),
         ]);
       } else {
         [quote, data] = await Promise.all([
-          fetchQuote(args.ticker),
-          fetchOHLCV(args.ticker, args.timeframe as Timeframe),
+          fetchQuote(ticker),
+          fetchOHLCV(ticker, timeframe as Timeframe),
         ]);
       }
 
       if (data.length < 50) {
-        return {
-          content: [{ type: "text", text: `Insufficient data: only ${data.length} bars (need 50+)` }],
-          isError: true,
-        };
+        return { error: `Insufficient data: only ${data.length} bars (need 50+)` };
       }
 
-      const technicals = computeTechnicalAnalysis(
-        args.ticker,
-        data,
-        args.timeframe as Timeframe,
-      );
-      const levels = computeLevelAnalysis(args.ticker, data);
+      const technicals = computeTechnicalAnalysis(ticker, data, timeframe as Timeframe);
+      const levels = computeLevelAnalysis(ticker, data);
       const volAnalysis = computeVolumeAnalysis(data);
 
       const report = formatReportForAgent({
-        ticker: args.ticker,
-        assetType: args.assetType as AssetType,
+        ticker,
+        assetType: assetType as AssetType,
         quote,
         technicals,
         levels,
@@ -155,92 +137,65 @@ const analyzeTechnicals = tool(
         timestamp: new Date(),
       });
 
-      const volumeInfo = `\n\n--- Volume Profile ---\nPoint of Control: $${volAnalysis.pointOfControl.toFixed(2)}\nValue Area: $${volAnalysis.valueAreaLow.toFixed(2)} - $${volAnalysis.valueAreaHigh.toFixed(2)}\nCurrent vs Avg Volume: ${volAnalysis.currentVsAvg.toFixed(2)}x\nVolume Trend: ${volAnalysis.volumeTrend}`;
-
-      return { content: [{ type: "text", text: report + volumeInfo }] };
-    } catch (err) {
       return {
-        content: [{ type: "text", text: `Error analyzing technicals: ${err}` }],
-        isError: true,
+        analysis: report,
+        volumeProfile: {
+          pointOfControl: volAnalysis.pointOfControl.toFixed(2),
+          valueAreaLow: volAnalysis.valueAreaLow.toFixed(2),
+          valueAreaHigh: volAnalysis.valueAreaHigh.toFixed(2),
+          currentVsAvg: volAnalysis.currentVsAvg.toFixed(2) + "x",
+          volumeTrend: volAnalysis.volumeTrend,
+        },
       };
-    }
-  },
-  { annotations: { readOnly: true } },
-);
+    },
+  }),
 
-const getSentiment = tool(
-  "get_sentiment",
-  "Fetch market sentiment data: Crypto Fear & Greed Index and market breadth indicators.",
-  {},
-  async () => {
-    try {
+  get_sentiment: tool({
+    description:
+      "Fetch market sentiment data: Crypto Fear & Greed Index and market breadth indicators.",
+    inputSchema: z.object({}),
+    execute: async () => {
       const sentiment = await fetchSentimentData();
-      const summary = getSentimentSummary(sentiment);
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(
-              { summary, raw: sentiment },
-              null,
-              2,
-            ),
-          },
-        ],
+        summary: getSentimentSummary(sentiment),
+        raw: sentiment,
       };
-    } catch (err) {
-      return {
-        content: [{ type: "text", text: `Error fetching sentiment: ${err}` }],
-        isError: true,
-      };
-    }
-  },
-  { annotations: { readOnly: true, openWorld: true } },
-);
+    },
+  }),
 
-const getSupportResistance = tool(
-  "get_support_resistance",
-  "Calculate key price levels: support/resistance from price action, Fibonacci retracements, and pivot points (classic and Camarilla).",
-  {
-    ticker: z.string().describe("Ticker symbol or CoinGecko coin ID"),
-    timeframe: z
-      .enum(["1m", "5m", "15m", "1h", "4h", "1d"])
-      .default("1d")
-      .describe("Timeframe for level calculation"),
-    assetType: z
-      .enum(["stock", "etf", "crypto"])
-      .default("stock")
-      .describe("Type of asset"),
-  },
-  async (args) => {
-    try {
-      let data: OHLCV[];
-
-      if (args.assetType === "crypto") {
-        data = await fetchCryptoOHLC(args.ticker, 30);
-      } else {
-        data = await fetchOHLCV(args.ticker, args.timeframe as Timeframe);
-      }
+  get_support_resistance: tool({
+    description:
+      "Calculate key price levels: support/resistance from price action, Fibonacci retracements, and pivot points (classic and Camarilla).",
+    inputSchema: z.object({
+      ticker: z.string().describe("Ticker symbol or CoinGecko coin ID"),
+      timeframe: z
+        .enum(["1m", "5m", "15m", "1h", "4h", "1d"])
+        .default("1d")
+        .describe("Timeframe for level calculation"),
+      assetType: z
+        .enum(["stock", "etf", "crypto"])
+        .default("stock")
+        .describe("Type of asset"),
+    }),
+    execute: async ({ ticker, timeframe, assetType }) => {
+      const data: OHLCV[] =
+        assetType === "crypto"
+          ? await fetchCryptoOHLC(ticker, 30)
+          : await fetchOHLCV(ticker, timeframe as Timeframe);
 
       if (data.length < 10) {
-        return {
-          content: [{ type: "text", text: "Insufficient data for level analysis" }],
-          isError: true,
-        };
+        return { error: "Insufficient data for level analysis" };
       }
 
-      const levels = computeLevelAnalysis(args.ticker, data);
+      const levels = computeLevelAnalysis(ticker, data);
       const currentPrice = data[data.length - 1]?.close;
 
       if (!currentPrice) {
-        return {
-          content: [{ type: "text", text: "Insufficient data for level analysis" }],
-          isError: true,
-        };
+        return { error: "Insufficient data for level analysis" };
       }
 
-      const result = {
-        ticker: args.ticker,
+      return {
+        ticker,
         currentPrice: currentPrice.toFixed(2),
         nearestSupport: levels.nearestSupport.toFixed(2),
         nearestResistance: levels.nearestResistance.toFixed(2),
@@ -272,30 +227,6 @@ const getSupportResistance = tool(
           source: r.source,
         })),
       };
-
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-    } catch (err) {
-      return {
-        content: [{ type: "text", text: `Error calculating levels: ${err}` }],
-        isError: true,
-      };
-    }
-  },
-  { annotations: { readOnly: true } },
-);
-
-export const tradingTools = [
-  getStockData,
-  getCryptoData,
-  analyzeTechnicals,
-  getSentiment,
-  getSupportResistance,
-];
-
-export function createTradingMcpServer() {
-  return createSdkMcpServer({
-    name: "finance-agent-tools",
-    version: "1.0.0",
-    tools: tradingTools,
-  });
-}
+    },
+  }),
+};

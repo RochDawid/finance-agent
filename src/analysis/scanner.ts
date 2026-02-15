@@ -6,7 +6,6 @@ import { computeVolumeAnalysis, type VolumeAnalysis } from "./volume.js";
 import { fetchSentimentData } from "../data/sentiment.js";
 import type {
   AnalysisReport,
-  AssetType,
   MarketCondition,
   Timeframe,
   Quote,

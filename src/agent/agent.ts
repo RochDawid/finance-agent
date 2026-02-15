@@ -1,13 +1,14 @@
-import {
-  query,
-  type SDKAssistantMessage,
-  type SDKResultSuccess
-} from "@anthropic-ai/claude-agent-sdk";
+import { generateText, stepCountIs } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+
 import { formatReportForAgent } from "../analysis/scanner.js";
-import type { AnalysisReport } from "../types/index.js";
+import { loadConfig } from "../config.js";
+import type { AnalysisReport, ModelProvider } from "../types/index.js";
 import { SignalSchema, type Signal } from "../types/index.js";
 import { SYSTEM_PROMPT } from "./prompts/system.js";
-import { createTradingMcpServer } from "./tools.js";
+import { tradingTools } from "./tools.js";
 
 export interface AgentResponse {
   marketOverview: string;
@@ -17,18 +18,59 @@ export interface AgentResponse {
   costUsd: number;
 }
 
-export async function runAgent(
-  reports: AnalysisReport[],
-  apiKey?: string,
-): Promise<AgentResponse> {
-  const mcpServer = createTradingMcpServer();
+// Approximate cost per 1M tokens (input/output) — best-effort, prices may change
+const MODEL_PRICES: Record<string, { input: number; output: number }> = {
+  "claude-opus-4-6": { input: 15, output: 75 },
+  "claude-sonnet-4-5-20250929": { input: 3, output: 15 },
+  "claude-haiku-4-5-20251001": { input: 0.8, output: 4 },
+  "gpt-4o": { input: 5, output: 15 },
+  "gpt-4o-mini": { input: 0.15, output: 0.6 },
+  "o3-mini": { input: 1.1, output: 4.4 },
+  "gemini-2.0-flash": { input: 0.075, output: 0.3 },
+  "gemini-1.5-pro": { input: 1.25, output: 5 },
+  "gemini-1.5-flash": { input: 0.075, output: 0.3 },
+};
 
-  // Build the prompt with analysis reports
+function estimateCost(
+  modelName: string,
+  promptTokens: number,
+  completionTokens: number,
+): number {
+  const prices = MODEL_PRICES[modelName];
+  if (!prices) return 0;
+  return (
+    (promptTokens * prices.input + completionTokens * prices.output) / 1_000_000
+  );
+}
+
+function getEnvKey(provider: ModelProvider): string | undefined {
+  switch (provider) {
+    case "anthropic":
+      return process.env.ANTHROPIC_API_KEY;
+    case "openai":
+      return process.env.OPENAI_API_KEY;
+    case "google":
+      return process.env.GOOGLE_API_KEY;
+  }
+}
+
+function createModel(provider: ModelProvider, modelName: string, apiKey: string) {
+  switch (provider) {
+    case "anthropic":
+      return createAnthropic({ apiKey })(modelName);
+    case "openai":
+      return createOpenAI({ apiKey })(modelName);
+    case "google":
+      return createGoogleGenerativeAI({ apiKey })(modelName);
+  }
+}
+
+function buildScanPrompt(reports: AnalysisReport[]): string {
   const reportsText = reports
     .map((r) => formatReportForAgent(r))
     .join("\n\n" + "=".repeat(60) + "\n\n");
 
-  const prompt = `Analyze the following watchlist scan data and generate specific, actionable trade signals. Use the provided tools to deep-dive into any ticker that shows potential.
+  return `Analyze the following watchlist scan data and generate specific, actionable trade signals. Use the provided tools to deep-dive into any ticker that shows potential.
 
 ## Watchlist Scan Results
 
@@ -43,44 +85,74 @@ ${reportsText}
 5. Return your analysis as a JSON object with the structure specified in your system prompt
 
 Remember: it's better to return zero signals than to force a marginal trade.`;
+}
 
-  let resultText = "";
-  let costUsd = 0;
+async function runAgentCore(
+  prompt: string,
+  apiKey: string | undefined,
+  maxSteps: number,
+): Promise<AgentResponse> {
+  const config = loadConfig();
+  const { provider, name: modelName } = config.model;
 
-  const conversation = query({
-    prompt,
-    options: {
-      systemPrompt: SYSTEM_PROMPT,
-      model: "claude-opus-4-6",
-      thinking: {type: "adaptive" },
-      effort: "max",
-      mcpServers: { "finance-tools": mcpServer },
-      maxTurns: 10,
-      ...(apiKey && { env: { ...process.env, ANTHROPIC_API_KEY: apiKey } }),
-    },
-  });
-
-  for await (const message of conversation) {
-    if (message.type === "assistant") {
-      const assistantMsg = message as SDKAssistantMessage;
-      for (const block of assistantMsg.message.content) {
-        if (block.type === "text") {
-          resultText += block.text;
-        }
-      }
-    }
-    if (message.type === "result" && message.subtype === "success") {
-      const result = message as SDKResultSuccess;
-      resultText = result.result;
-      costUsd = result.total_cost_usd;
-    }
+  const effectiveKey = apiKey ?? getEnvKey(provider);
+  if (!effectiveKey) {
+    throw new Error(
+      `No API key provided for provider "${provider}". ` +
+        `Add ${provider.toUpperCase()}_API_KEY to your .env or configure it in Settings.`,
+    );
   }
 
-  return parseAgentResponse(resultText, costUsd);
+  const model = createModel(provider, modelName, effectiveKey);
+
+  // Enable extended thinking for Anthropic models that support it
+  const providerOptions =
+    provider === "anthropic"
+      ? { anthropic: { thinking: { type: "enabled" as const, budgetTokens: 16000 } } }
+      : undefined;
+
+  const result = await generateText({
+    model,
+    system: SYSTEM_PROMPT,
+    prompt,
+    tools: tradingTools,
+    stopWhen: stepCountIs(maxSteps),
+    ...(providerOptions && { providerOptions }),
+  });
+
+  const cost = estimateCost(
+    modelName,
+    result.usage.inputTokens ?? 0,
+    result.usage.outputTokens ?? 0,
+  );
+
+  return parseAgentResponse(result.text, cost);
+}
+
+export async function runAgent(
+  reports: AnalysisReport[],
+  apiKey?: string,
+): Promise<AgentResponse> {
+  return runAgentCore(buildScanPrompt(reports), apiKey, 10);
+}
+
+export async function analyzeOneTicker(
+  ticker: string,
+  assetType: "stock" | "etf" | "crypto" = "stock",
+  apiKey?: string,
+): Promise<AgentResponse> {
+  const prompt = `Analyze ${ticker} (${assetType}) for potential day trading signals. Use the tools to:
+1. Get current price data and recent OHLCV
+2. Run full technical analysis on the daily and hourly timeframe
+3. Check support/resistance levels
+4. Check market sentiment
+
+Then generate specific trade signals if a valid setup exists, or explain why no signal is appropriate.`;
+
+  return runAgentCore(prompt, apiKey, 8);
 }
 
 function parseAgentResponse(text: string, costUsd: number): AgentResponse {
-  // Try to extract JSON from the response
   const jsonMatch = text.match(/\{[\s\S]*"signals"[\s\S]*\}/);
   if (!jsonMatch) {
     return {
@@ -99,15 +171,15 @@ function parseAgentResponse(text: string, costUsd: number): AgentResponse {
     if (Array.isArray(parsed.signals)) {
       for (const s of parsed.signals) {
         try {
-          const validated = SignalSchema.parse({
-            ...s,
-            timestamp: s.timestamp ?? new Date().toISOString(),
-          });
-          signals.push(validated);
-        } catch (err) {
+          signals.push(
+            SignalSchema.parse({
+              ...s,
+              timestamp: s.timestamp ?? new Date().toISOString(),
+            }),
+          );
+        } catch {
           console.warn(
-            `Warning: skipping invalid signal for ${s.ticker ?? "unknown"}:`,
-            err,
+            `Warning: skipping invalid signal for ${s.ticker ?? "unknown"}`,
           );
         }
       }
@@ -120,8 +192,7 @@ function parseAgentResponse(text: string, costUsd: number): AgentResponse {
       rawText: text,
       costUsd,
     };
-  } catch (err) {
-    console.warn("Warning: failed to parse agent response JSON:", err);
+  } catch {
     return {
       marketOverview: text.slice(0, 500),
       signals: [],
@@ -130,47 +201,4 @@ function parseAgentResponse(text: string, costUsd: number): AgentResponse {
       costUsd,
     };
   }
-}
-
-// Run a one-shot analysis for a specific ticker
-export async function analyzeOneTicker(
-  ticker: string,
-  assetType: "stock" | "etf" | "crypto" = "stock",
-  apiKey?: string,
-): Promise<AgentResponse> {
-  const mcpServer = createTradingMcpServer();
-
-  const prompt = `Analyze ${ticker} (${assetType}) for potential day trading signals. Use the tools to:
-1. Get current price data and recent OHLCV
-2. Run full technical analysis on the daily and hourly timeframe
-3. Check support/resistance levels
-4. Check market sentiment
-
-Then generate specific trade signals if a valid setup exists, or explain why no signal is appropriate.`;
-
-  let resultText = "";
-  let costUsd = 0;
-
-  const conversation = query({
-    prompt,
-    options: {
-      systemPrompt: SYSTEM_PROMPT,
-      model: "claude-opus-4-6",
-      thinking: {type: "adaptive" },
-      effort: "max",
-      mcpServers: { "finance-tools": mcpServer },
-      maxTurns: 8,
-      ...(apiKey && { env: { ...process.env, ANTHROPIC_API_KEY: apiKey } }),
-    },
-  });
-
-  for await (const message of conversation) {
-    if (message.type === "result" && message.subtype === "success") {
-      const result = message as SDKResultSuccess;
-      resultText = result.result;
-      costUsd = result.total_cost_usd;
-    }
-  }
-
-  return parseAgentResponse(resultText, costUsd);
 }
