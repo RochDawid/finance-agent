@@ -1,6 +1,6 @@
 "use client";
 
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import type { OHLCV, Timeframe } from "@finance/types/index.js";
 
 interface OHLCVResponse {
@@ -16,11 +16,12 @@ export function useOHLCV(
   timeframe: Timeframe = "1d",
   type: "stock" | "crypto" = "stock",
 ) {
-  const { data, error, isLoading } = useSWR<OHLCVResponse>(
-    ticker ? `/api/ticker/${ticker}/ohlcv?tf=${timeframe}&type=${type}` : null,
-    fetcher,
-    { refreshInterval: 60_000 },
-  );
+  const { data, error, isLoading } = useQuery<OHLCVResponse>({
+    queryKey: ["ohlcv", ticker, timeframe, type],
+    queryFn: () => fetcher(`/api/ticker/${ticker}/ohlcv?tf=${timeframe}&type=${type}`),
+    enabled: !!ticker,
+    refetchInterval: 60_000,
+  });
 
   return { data: data?.data, error, isLoading };
 }

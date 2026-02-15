@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useCallback, type ReactNode } from "react";
-import useSWR from "swr";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AppConfig } from "@finance/types/index.js";
 
 interface ConfigContextValue {
@@ -29,7 +29,16 @@ export function useConfig() {
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
-  const { data, isLoading, error, mutate } = useSWR<AppConfig>("/api/config", fetcher);
+  const queryClient = useQueryClient();
+  const { data, isLoading, error } = useQuery<AppConfig>({
+    queryKey: ["config"],
+    queryFn: () => fetcher("/api/config"),
+  });
+
+  const invalidate = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ["config"] }),
+    [queryClient],
+  );
 
   const updateConfig = useCallback(
     async (config: AppConfig) => {
@@ -38,9 +47,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
       });
-      await mutate();
+      await invalidate();
     },
-    [mutate],
+    [invalidate],
   );
 
   const addTicker = useCallback(
@@ -50,9 +59,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", ticker, type }),
       });
-      await mutate();
+      await invalidate();
     },
-    [mutate],
+    [invalidate],
   );
 
   const removeTicker = useCallback(
@@ -62,13 +71,13 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "remove", ticker, type }),
       });
-      await mutate();
+      await invalidate();
     },
-    [mutate],
+    [invalidate],
   );
 
   return (
-    <ConfigContext value={{ config: data, isLoading, error, updateConfig, addTicker, removeTicker }}>
+    <ConfigContext value={{ config: data, isLoading, error: error ?? undefined, updateConfig, addTicker, removeTicker }}>
       {children}
     </ConfigContext>
   );

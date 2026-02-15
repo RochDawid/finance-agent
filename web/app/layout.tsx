@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/lib/providers/theme-provider";
+import { QueryProvider } from "@/lib/providers/query-provider";
 import { WSProvider } from "@/lib/providers/ws-provider";
 import { ConfigProvider } from "@/lib/providers/config-provider";
 import { AppShell } from "@/components/layout/app-shell";
@@ -35,11 +36,13 @@ export default function RootLayout({
           Skip to main content
         </a>
         <ThemeProvider>
-          <WSProvider>
-            <ConfigProvider>
-              <AppShell>{children}</AppShell>
-            </ConfigProvider>
-          </WSProvider>
+          <QueryProvider>
+            <WSProvider>
+              <ConfigProvider>
+                <AppShell>{children}</AppShell>
+              </ConfigProvider>
+            </WSProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

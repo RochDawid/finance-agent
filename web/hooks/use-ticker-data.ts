@@ -1,6 +1,6 @@
 "use client";
 
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import type { Quote, TechnicalAnalysis, LevelAnalysis } from "@finance/types/index.js";
 import type { VolumeAnalysis } from "@finance/analysis/volume.js";
 
@@ -14,11 +14,12 @@ interface TickerData {
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function useTickerData(ticker: string | null, assetType: "stock" | "crypto" = "stock") {
-  const { data, error, isLoading, mutate } = useSWR<TickerData>(
-    ticker ? `/api/ticker/${ticker}?type=${assetType}` : null,
-    fetcher,
-    { refreshInterval: 30_000 },
-  );
+  const { data, error, isLoading, refetch } = useQuery<TickerData>({
+    queryKey: ["ticker", ticker, assetType],
+    queryFn: () => fetcher(`/api/ticker/${ticker}?type=${assetType}`),
+    enabled: !!ticker,
+    refetchInterval: 30_000,
+  });
 
-  return { data, error, isLoading, refresh: mutate };
+  return { data, error, isLoading, refresh: refetch };
 }
