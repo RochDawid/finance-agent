@@ -1,10 +1,9 @@
 watchlist:
-  stocks:
-    - TSLA
-    - NVDA
+  stocks: []
   crypto:
     - bitcoin
     - ethereum
+    - solana
 risk:
   maxRiskPerTrade: 0.05
   minRiskReward: 2
@@ -12,11 +11,11 @@ risk:
   maxOpenPositions: 1
   maxCorrelatedPositions: 2
 intervals:
-  scan: 300000
+  analysis: 300000
   dataRefresh: 60000
 model:
-  provider: anthropic
-  name: claude-opus-4-6
+  provider: google
+  name: gemini-3-pro-preview
 apiKeys:
   alphaVantage: ""
   coinGecko: ""
