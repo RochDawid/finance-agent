@@ -6,6 +6,7 @@ import type { AppConfig } from "@finance/types/index.js";
 
 interface ConfigContextValue {
   config: AppConfig | undefined;
+  serverHasApiKey: boolean;
   isLoading: boolean;
   error: Error | undefined;
   updateConfig: (config: AppConfig) => Promise<void>;
@@ -15,6 +16,7 @@ interface ConfigContextValue {
 
 const ConfigContext = createContext<ConfigContextValue>({
   config: undefined,
+  serverHasApiKey: false,
   isLoading: true,
   error: undefined,
   updateConfig: async () => {},
@@ -26,11 +28,18 @@ export function useConfig() {
   return useContext(ConfigContext);
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { error?: string };
+    throw new Error(body.error ?? `Request failed: ${res.status}`);
+  }
+  return res.json();
+};
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery<AppConfig>({
+  const { data, isLoading, error } = useQuery<AppConfig & { serverHasApiKey?: boolean }>({
     queryKey: ["config"],
     queryFn: () => fetcher("/api/config"),
   });
@@ -42,11 +51,15 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   const updateConfig = useCallback(
     async (config: AppConfig) => {
-      await fetch("/api/config", {
+      const res = await fetch("/api/config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(body.error ?? "Failed to save config");
+      }
       await invalidate();
     },
     [invalidate],
@@ -54,11 +67,15 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   const addTicker = useCallback(
     async (ticker: string, type: "stocks" | "crypto") => {
-      await fetch("/api/config/watchlist", {
+      const res = await fetch("/api/config/watchlist", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", ticker, type }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(body.error ?? "Failed to add ticker");
+      }
       await invalidate();
     },
     [invalidate],
@@ -66,18 +83,22 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   const removeTicker = useCallback(
     async (ticker: string, type: "stocks" | "crypto") => {
-      await fetch("/api/config/watchlist", {
+      const res = await fetch("/api/config/watchlist", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "remove", ticker, type }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(body.error ?? "Failed to remove ticker");
+      }
       await invalidate();
     },
     [invalidate],
   );
 
   return (
-    <ConfigContext value={{ config: data, isLoading, error: error ?? undefined, updateConfig, addTicker, removeTicker }}>
+    <ConfigContext value={{ config: data, serverHasApiKey: data?.serverHasApiKey ?? false, isLoading, error: error ?? undefined, updateConfig, addTicker, removeTicker }}>
       {children}
     </ConfigContext>
   );
