@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,8 +29,10 @@ export default function AnalysisPage() {
   const { config } = useConfig();
   const assetType = config?.watchlist.crypto.includes(ticker) ? "crypto" : "stock";
 
-  const { data, isLoading } = useTickerData(ticker, assetType);
-  const { data: ohlcv, isLoading: chartLoading } = useOHLCV(ticker, timeframe, assetType);
+  // Wait for config before fetching so assetType is correct from the start
+  const ready = !!config;
+  const { data, isLoading, error } = useTickerData(ready ? ticker : null, assetType);
+  const { data: ohlcv, isLoading: chartLoading } = useOHLCV(ready ? ticker : null, timeframe, assetType);
 
   return (
     <div className="space-y-6">
@@ -41,6 +43,13 @@ export default function AnalysisPage() {
         <h1 className="text-xl font-bold font-mono">{ticker}</h1>
         {data?.technicals && <BiasBadge bias={data.technicals.overallBias} />}
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error.message}</span>
+        </div>
+      )}
 
       {data?.quote && (
         <PriceDisplay
