@@ -3,16 +3,17 @@ import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "react";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2",
+  "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-[var(--foreground)] text-[var(--background)]",
-        secondary: "border-transparent bg-[var(--muted)] text-[var(--muted-foreground)]",
-        outline: "text-[var(--foreground)]",
-        bullish: "border-transparent bg-[var(--color-bullish-muted)] text-[var(--color-bullish)]",
-        bearish: "border-transparent bg-[var(--color-bearish-muted)] text-[var(--color-bearish)]",
-        neutral: "border-transparent bg-[var(--color-neutral-muted)] text-[var(--color-neutral)]",
+        default:   "bg-[var(--foreground)] text-[var(--background)] border border-transparent",
+        secondary: "bg-[var(--muted)] text-[var(--muted-foreground)] border border-transparent",
+        outline:   "border border-[var(--border)] text-[var(--foreground)]",
+        bullish:   "bg-[var(--color-bullish-muted)] text-[var(--color-bullish)] border border-[var(--color-bullish)]/20",
+        bearish:   "bg-[var(--color-bearish-muted)] text-[var(--color-bearish)] border border-[var(--color-bearish)]/20",
+        neutral:   "bg-[var(--color-neutral-muted)] text-[var(--color-neutral)] border border-[var(--color-neutral)]/20",
+        brand:     "bg-[var(--color-brand)]/10 text-[var(--color-brand)] border border-[var(--color-brand)]/20",
       },
     },
     defaultVariants: {
