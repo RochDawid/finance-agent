@@ -43,8 +43,8 @@ wss.on("connection", (ws) => {
   ws.on("message", (raw) => {
     try {
       const msg = JSON.parse(raw.toString()) as { action?: string; apiKey?: string };
-      if (msg.action === "trigger_scan") {
-        import("./lib/scan-loop.js").then((m) => m.performScan(msg.apiKey));
+      if (msg.action === "trigger_analysis") {
+        import("./lib/analysis-loop.js").then((m) => m.performAnalysis(msg.apiKey));
       }
     } catch {
       // ignore malformed messages

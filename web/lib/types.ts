@@ -1,13 +1,13 @@
 import type { Signal, MarketCondition, AnalysisReport } from "@finance/types/index.js";
 import type { AgentResponse } from "@finance/agent/agent.js";
-import type { ScanResult } from "@finance/analysis/scanner.js";
+import type { AnalysisResult } from "@finance/analysis/analyzer.js";
 import type { VolumeAnalysis } from "@finance/analysis/volume.js";
 
 export type WSEventType =
-  | "scan:start"
-  | "scan:progress"
-  | "scan:complete"
-  | "scan:error"
+  | "analysis:start"
+  | "analysis:progress"
+  | "analysis:complete"
+  | "analysis:error"
   | "connection:init";
 
 export interface WSMessage {
@@ -26,21 +26,21 @@ export interface DashboardState {
   reports: AnalysisReport[];
   volumeAnalysis: Record<string, VolumeAnalysis>;
   agentResponse: AgentResponse | null;
-  isScanning: boolean;
-  scanStage: string | null;
-  scanMessage: string | null;
-  scanError: string | null;
-  lastScanTime: string | null;
+  isAnalyzing: boolean;
+  analysisStage: string | null;
+  analysisMessage: string | null;
+  analysisError: string | null;
+  lastAnalysisTime: string | null;
   errors: Array<{ ticker: string; error: string }>;
 }
 
-export interface ScanCacheData {
-  scanResult: ScanResult | null;
+export interface AnalysisCacheData {
+  analysisResult: AnalysisResult | null;
   agentResponse: AgentResponse | null;
   timestamp: string | null;
 }
 
-export interface ScanHistoryEntry {
+export interface AnalysisHistoryEntry {
   timestamp: string;
   signals: Signal[];
   marketCondition: MarketCondition | null;

@@ -1,8 +1,8 @@
-import { scanWatchlist } from "@finance/analysis/scanner.js";
+import { analyzeWatchlist } from "@finance/analysis/analyzer.js";
 import { runAgent } from "@finance/agent/agent.js";
 import { loadConfig } from "@finance/config.js";
 import { broadcast } from "./ws-server.js";
-import { setScanCache, isScanning, setScanning } from "./scan-cache.js";
+import { setAnalysisCache, isAnalyzing, setAnalyzing } from "./analysis-cache.js";
 
 const PROVIDER_ENV_KEYS: Record<string, string> = {
   anthropic: "ANTHROPIC_API_KEY",
@@ -16,9 +16,9 @@ const PROVIDER_DISPLAY: Record<string, string> = {
   google: "Gemini",
 };
 
-export async function performScan(apiKey?: string): Promise<void> {
-  if (isScanning()) {
-    console.log("[scan] Scan already in progress, skipping");
+export async function performAnalysis(apiKey?: string): Promise<void> {
+  if (isAnalyzing()) {
+    console.log("[analyze] Analysis already in progress, skipping");
     return;
   }
 
@@ -29,53 +29,53 @@ export async function performScan(apiKey?: string): Promise<void> {
   const envKey = PROVIDER_ENV_KEYS[provider];
   const effectiveKey = apiKey ?? (envKey ? process.env[envKey] : undefined);
   if (!effectiveKey) {
-    broadcast("scan:error", {
+    broadcast("analysis:error", {
       error: `No API key configured for ${provider}. Add yours in Settings → API Keys.`,
     });
     return;
   }
 
-  setScanning(true);
-  broadcast("scan:start", {});
+  setAnalyzing(true);
+  broadcast("analysis:start", {});
 
   try {
     const { stocks, crypto } = config.watchlist;
     const modelLabel = PROVIDER_DISPLAY[provider] ?? provider;
 
-    broadcast("scan:progress", {
+    broadcast("analysis:progress", {
       stage: "Fetching market data",
       message: `Loading quotes for ${stocks.length + crypto.length} tickers...`,
     });
-    const scanResult = await scanWatchlist(stocks, crypto);
+    const analysisResult = await analyzeWatchlist(stocks, crypto);
 
-    broadcast("scan:progress", {
+    broadcast("analysis:progress", {
       stage: "Running AI analysis",
       message: `${modelLabel} is analyzing the watchlist — this may take a minute...`,
     });
     // Never log the apiKey
-    const agentResponse = await runAgent(scanResult.reports, effectiveKey);
+    const agentResponse = await runAgent(analysisResult.reports, effectiveKey);
 
-    setScanCache(scanResult, agentResponse);
+    setAnalysisCache(analysisResult, agentResponse);
 
     const volumeObj: Record<string, unknown> = {};
-    for (const [key, value] of scanResult.volumeAnalysis) {
+    for (const [key, value] of analysisResult.volumeAnalysis) {
       volumeObj[key] = value;
     }
 
-    broadcast("scan:complete", {
+    broadcast("analysis:complete", {
       signals: agentResponse.signals,
       marketOverview: agentResponse.marketOverview,
-      marketCondition: scanResult.marketCondition,
-      reports: scanResult.reports,
+      marketCondition: analysisResult.marketCondition,
+      reports: analysisResult.reports,
       volumeAnalysis: volumeObj,
-      errors: scanResult.errors,
+      errors: analysisResult.errors,
       costUsd: agentResponse.costUsd,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("[scan] Error:", message);
-    broadcast("scan:error", { error: message });
+    console.error("[analyze] Error:", message);
+    broadcast("analysis:error", { error: message });
   } finally {
-    setScanning(false);
+    setAnalyzing(false);
   }
 }
