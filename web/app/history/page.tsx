@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Clock, Activity } from "lucide-react";
 import { cn, formatPercent } from "@/lib/utils";
-import type { ScanHistoryEntry, SignalWithId } from "@/lib/types";
+import type { AnalysisHistoryEntry, SignalWithId } from "@/lib/types";
 import type { Signal } from "@finance/types/index.js";
 
 function formatTimestamp(ts: string): string {
@@ -27,7 +27,7 @@ function addIds(signals: Signal[]): SignalWithId[] {
   return signals.map((s, i) => ({ ...s, id: `hist-${s.ticker}-${s.direction}-${i}` }));
 }
 
-function HistoryEntry({ entry, index }: { entry: ScanHistoryEntry; index: number }) {
+function HistoryEntry({ entry, index }: { entry: AnalysisHistoryEntry; index: number }) {
   const [expanded, setExpanded] = useState(index === 0);
   const mc = entry.marketCondition;
 
@@ -55,7 +55,7 @@ function HistoryEntry({ entry, index }: { entry: ScanHistoryEntry; index: number
                       mc.sp500Change >= 0 ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
                     )}
                   >
-                    S&P {mc.sp500Change >= 0 ? "+" : ""}{formatPercent(mc.sp500Change)}
+                    S&P {formatPercent(mc.sp500Change)}
                   </span>
                   <span className="text-[var(--border)]">·</span>
                   <span
@@ -64,7 +64,7 @@ function HistoryEntry({ entry, index }: { entry: ScanHistoryEntry; index: number
                       mc.nasdaqChange >= 0 ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
                     )}
                   >
-                    NASDAQ {mc.nasdaqChange >= 0 ? "+" : ""}{formatPercent(mc.nasdaqChange)}
+                    NASDAQ {formatPercent(mc.nasdaqChange)}
                   </span>
                   <span className="text-[var(--border)]">·</span>
                 </>
@@ -117,12 +117,12 @@ function HistoryEntry({ entry, index }: { entry: ScanHistoryEntry; index: number
 }
 
 export default function HistoryPage() {
-  const [history, setHistory] = useState<ScanHistoryEntry[] | null>(null);
+  const [history, setHistory] = useState<AnalysisHistoryEntry[] | null>(null);
 
   useEffect(() => {
-    fetch("/api/scan")
+    fetch("/api/analyze")
       .then((r) => r.json())
-      .then((data: { history?: ScanHistoryEntry[] }) => {
+      .then((data: { history?: AnalysisHistoryEntry[] }) => {
         setHistory(data.history ?? []);
       })
       .catch(() => setHistory([]));

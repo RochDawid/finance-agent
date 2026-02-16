@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   List,
   Settings,
-  Scan,
+  Activity,
   BarChart3,
 } from "lucide-react";
 import { useWS } from "@/lib/providers/ws-provider";
@@ -19,7 +19,7 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
-  const { triggerScan, state } = useWS();
+  const { triggerAnalysis, state } = useWS();
   const { config } = useConfig();
 
   const navigate = (path: string) => {
@@ -78,13 +78,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             <Command.Group heading="Actions" className="text-xs text-[var(--muted-foreground)] px-2 py-1">
               <Command.Item
                 onSelect={() => {
-                  triggerScan();
+                  triggerAnalysis();
                   onOpenChange(false);
                 }}
                 className="flex items-center gap-2 px-2 py-1.5 text-sm rounded cursor-pointer aria-selected:bg-[var(--accent)]"
               >
-                <Scan className="h-4 w-4" />
-                Trigger Scan
+                <Activity className="h-4 w-4" />
+                Run Analysis
               </Command.Item>
             </Command.Group>
 

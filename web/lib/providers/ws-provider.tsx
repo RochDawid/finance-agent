@@ -17,7 +17,7 @@ interface WSContextValue {
   state: DashboardState;
   connected: boolean;
   hasApiKey: boolean;
-  triggerScan: () => void;
+  triggerAnalysis: () => void;
 }
 
 const initialState: DashboardState = {
@@ -26,11 +26,11 @@ const initialState: DashboardState = {
   reports: [],
   volumeAnalysis: {},
   agentResponse: null,
-  isScanning: false,
-  scanStage: null,
-  scanMessage: null,
-  scanError: null,
-  lastScanTime: null,
+  isAnalyzing: false,
+  analysisStage: null,
+  analysisMessage: null,
+  analysisError: null,
+  lastAnalysisTime: null,
   errors: [],
 };
 
@@ -38,7 +38,7 @@ const WSContext = createContext<WSContextValue>({
   state: initialState,
   connected: false,
   hasApiKey: false,
-  triggerScan: () => {},
+  triggerAnalysis: () => {},
 });
 
 export function useWS() {
@@ -58,12 +58,12 @@ function storageKeyFor(provider: string): string {
 }
 
 export function WSProvider({ children }: { children: ReactNode }) {
-  const { config } = useConfig();
+  const { config, serverHasApiKey } = useConfig();
   const provider = config?.model?.provider ?? "anthropic";
 
   const [state, setState] = useState<DashboardState>(initialState);
   const [connected, setConnected] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
+  const [localHasApiKey, setLocalHasApiKey] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -82,19 +82,19 @@ export function WSProvider({ children }: { children: ReactNode }) {
         const msg = JSON.parse(event.data as string) as WSMessage;
 
         switch (msg.type) {
-          case "scan:start":
-            setState((prev) => ({ ...prev, isScanning: true, scanStage: null, scanMessage: null, scanError: null }));
+          case "analysis:start":
+            setState((prev) => ({ ...prev, isAnalyzing: true, analysisStage: null, analysisMessage: null, analysisError: null }));
             break;
-          case "scan:progress": {
+          case "analysis:progress": {
             const progress = msg.data as { stage?: string; message?: string };
             setState((prev) => ({
               ...prev,
-              scanStage: progress.stage ?? prev.scanStage,
-              scanMessage: progress.message ?? prev.scanMessage,
+              analysisStage: progress.stage ?? prev.analysisStage,
+              analysisMessage: progress.message ?? prev.analysisMessage,
             }));
             break;
           }
-          case "scan:complete": {
+          case "analysis:complete": {
             const data = msg.data as {
               signals: Signal[];
               marketCondition: DashboardState["marketCondition"];
@@ -116,22 +116,22 @@ export function WSProvider({ children }: { children: ReactNode }) {
                 rawText: "",
                 costUsd: data.costUsd,
               },
-              isScanning: false,
-              scanStage: null,
-              scanMessage: null,
-              lastScanTime: msg.timestamp,
+              isAnalyzing: false,
+              analysisStage: null,
+              analysisMessage: null,
+              lastAnalysisTime: msg.timestamp,
               errors: data.errors,
             }));
             break;
           }
-          case "scan:error": {
+          case "analysis:error": {
             const errData = msg.data as { error?: string };
             setState((prev) => ({
               ...prev,
-              isScanning: false,
-              scanStage: null,
-              scanMessage: null,
-              scanError: errData.error ?? "An error occurred during the scan.",
+              isAnalyzing: false,
+              analysisStage: null,
+              analysisMessage: null,
+              analysisError: errData.error ?? "An error occurred during the analysis.",
             }));
             break;
           }
@@ -153,9 +153,9 @@ export function WSProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Sync hasApiKey from localStorage whenever provider or storage changes
+    // Sync localHasApiKey from localStorage whenever provider or storage changes
     const syncKey = () => {
-      setHasApiKey(!!localStorage.getItem(storageKeyFor(provider)));
+      setLocalHasApiKey(!!localStorage.getItem(storageKeyFor(provider)));
     };
     syncKey();
     window.addEventListener("storage", syncKey);
@@ -164,18 +164,18 @@ export function WSProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Load initial cached data
-    fetch("/api/scan")
+    fetch("/api/analyze")
       .then((r) => r.json())
-      .then((data: { scanResult?: { reports?: DashboardState["reports"]; marketCondition?: DashboardState["marketCondition"]; errors?: DashboardState["errors"] }; agentResponse?: { signals?: Signal[]; marketOverview?: string; costUsd?: number; rawText?: string }; timestamp?: string; isScanning?: boolean }) => {
-        if (data.scanResult && data.agentResponse) {
+      .then((data: { analysisResult?: { reports?: DashboardState["reports"]; marketCondition?: DashboardState["marketCondition"]; errors?: DashboardState["errors"] }; agentResponse?: { signals?: Signal[]; marketOverview?: string; costUsd?: number; rawText?: string }; timestamp?: string; isAnalyzing?: boolean }) => {
+        if (data.analysisResult && data.agentResponse) {
           setState((prev) => ({
             ...prev,
             signals: addIdsToSignals(data.agentResponse!.signals ?? []),
-            marketCondition: data.scanResult!.marketCondition ?? null,
-            reports: data.scanResult!.reports ?? [],
+            marketCondition: data.analysisResult!.marketCondition ?? null,
+            reports: data.analysisResult!.reports ?? [],
             agentResponse: data.agentResponse as DashboardState["agentResponse"],
-            isScanning: data.isScanning ?? false,
-            lastScanTime: data.timestamp ?? null,
+            isAnalyzing: data.isAnalyzing ?? false,
+            lastAnalysisTime: data.timestamp ?? null,
           }));
         }
       })
@@ -189,15 +189,17 @@ export function WSProvider({ children }: { children: ReactNode }) {
     };
   }, [connect]);
 
-  const triggerScan = useCallback(() => {
+  const triggerAnalysis = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const apiKey = localStorage.getItem(storageKeyFor(provider)) ?? undefined;
-      wsRef.current.send(JSON.stringify({ action: "trigger_scan", apiKey }));
+      wsRef.current.send(JSON.stringify({ action: "trigger_analysis", apiKey }));
     }
   }, [provider]);
 
+  const hasApiKey = localHasApiKey || serverHasApiKey;
+
   return (
-    <WSContext value={{ state, connected, hasApiKey, triggerScan }}>
+    <WSContext value={{ state, connected, hasApiKey, triggerAnalysis }}>
       {children}
     </WSContext>
   );

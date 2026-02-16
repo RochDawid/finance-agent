@@ -32,7 +32,7 @@ export default function SignalDetailPage() {
           <ArrowLeft className="h-4 w-4 mr-1" /> Back
         </Button>
         <div className="text-center py-12 text-[var(--muted-foreground)]">
-          Signal not found. Run a scan to generate signals.
+          Signal not found. Run an analysis to generate signals.
         </div>
       </div>
     );

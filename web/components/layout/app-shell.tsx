@@ -18,11 +18,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const { triggerScan, state } = useWS();
+  const { triggerAnalysis, state } = useWS();
 
   useKeyboardShortcuts([
     { key: "k", meta: true, handler: () => setCmdOpen(true), description: "Command palette" },
-    { key: "a", meta: true, handler: () => triggerScan(), description: "Run analysis" },
+    { key: "a", meta: true, handler: () => triggerAnalysis(), description: "Run analysis" },
     { key: "d", handler: () => router.push("/"), description: "Dashboard" },
     { key: "w", handler: () => router.push("/watchlist"), description: "Watchlist" },
     { key: "h", handler: () => router.push("/history"), description: "History" },
@@ -61,12 +61,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
       <ShortcutsHelp open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
-      {/* Accessible live region for scan updates */}
+      {/* Accessible live region for analysis updates */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {state.isScanning
+        {state.isAnalyzing
           ? "Analysis in progress"
-          : state.lastScanTime
-            ? `Analysis completed at ${new Date(state.lastScanTime).toLocaleTimeString()}`
+          : state.lastAnalysisTime
+            ? `Analysis completed at ${new Date(state.lastAnalysisTime).toLocaleTimeString()}`
             : ""}
       </div>
     </TooltipProvider>
