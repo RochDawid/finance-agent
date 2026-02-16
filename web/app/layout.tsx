@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/lib/providers/theme-provider";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { WSProvider } from "@/lib/providers/ws-provider";
 import { ConfigProvider } from "@/lib/providers/config-provider";
+import { ToastProvider } from "@/lib/providers/toast-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 
-const inter = Inter({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-sans",
@@ -31,7 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
@@ -39,7 +40,9 @@ export default function RootLayout({
           <QueryProvider>
             <ConfigProvider>
               <WSProvider>
-                <AppShell>{children}</AppShell>
+                <ToastProvider>
+                  <AppShell>{children}</AppShell>
+                </ToastProvider>
               </WSProvider>
             </ConfigProvider>
           </QueryProvider>

@@ -1,72 +1,90 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --color-terminal-50: #fafafa;
-  --color-terminal-100: #f5f5f5;
-  --color-terminal-200: #e5e5e5;
-  --color-terminal-300: #d4d4d4;
-  --color-terminal-400: #a3a3a3;
-  --color-terminal-500: #737373;
-  --color-terminal-600: #525252;
-  --color-terminal-700: #404040;
-  --color-terminal-800: #262626;
-  --color-terminal-850: #1a1a1a;
-  --color-terminal-900: #171717;
-  --color-terminal-950: #0a0a0a;
+  /* Navy-based neutral scale */
+  --color-navy-50:  #f0f4fb;
+  --color-navy-100: #dce8f5;
+  --color-navy-200: #c0d2e8;
+  --color-navy-300: #8fafc8;
+  --color-navy-400: #5e87a6;
+  --color-navy-500: #3d6280;
+  --color-navy-600: #2b4a66;
+  --color-navy-700: #1e3350;
+  --color-navy-750: #162840;
+  --color-navy-800: #0f1e33;
+  --color-navy-850: #0a1525;
+  --color-navy-900: #070d1a;
+  --color-navy-950: #040910;
 
-  --color-bullish: oklch(0.72 0.19 145);
-  --color-bullish-muted: oklch(0.72 0.19 145 / 0.15);
-  --color-bearish: oklch(0.65 0.2 25);
-  --color-bearish-muted: oklch(0.65 0.2 25 / 0.15);
-  --color-neutral: oklch(0.7 0.15 60);
-  --color-neutral-muted: oklch(0.7 0.15 60 / 0.15);
+  /* Semantic finance colors */
+  --color-bullish:       #0fd494;
+  --color-bullish-muted: color-mix(in oklch, #0fd494 14%, transparent);
+  --color-bearish:       #f24040;
+  --color-bearish-muted: color-mix(in oklch, #f24040 14%, transparent);
+  --color-neutral:       #f0a020;
+  --color-neutral-muted: color-mix(in oklch, #f0a020 14%, transparent);
 
-  --color-long: oklch(0.72 0.19 145);
-  --color-short: oklch(0.65 0.2 25);
+  --color-long:  #0fd494;
+  --color-short: #f24040;
 
-  --color-confidence-low: oklch(0.65 0.2 25);
-  --color-confidence-medium: oklch(0.7 0.15 60);
-  --color-confidence-high: oklch(0.72 0.19 145);
-  --color-confidence-very-high: oklch(0.75 0.22 160);
+  --color-confidence-low:       #f24040;
+  --color-confidence-medium:    #f0a020;
+  --color-confidence-high:      #0fd494;
+  --color-confidence-very-high: #0fd4c0;
 
-  --animate-shimmer: shimmer 2s linear infinite;
+  /* Brand accent */
+  --color-brand: #6366f1;
+  --color-brand-hover: #818cf8;
+
+  /* Animations */
+  --animate-shimmer:        shimmer 2s linear infinite;
   --animate-progress-pulse: progress-pulse 1.4s ease-in-out infinite;
-  --animate-spin-slow: spin-slow 1.5s linear infinite;
+  --animate-spin-slow:      spin-slow 1.5s linear infinite;
+  --animate-fade-in:        fade-in 0.2s ease-out;
+  --animate-slide-up:       slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pulse-glow:     pulse-glow 2s ease-in-out infinite;
 }
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── Light theme ─────────────────────────────── */
 :root {
-  --background: #fafafa;
-  --foreground: var(--color-terminal-900);
-  --card: white;
-  --card-foreground: var(--color-terminal-900);
-  --border: var(--color-terminal-200);
-  --muted: var(--color-terminal-100);
-  --muted-foreground: var(--color-terminal-500);
-  --accent: var(--color-terminal-100);
-  --accent-foreground: var(--color-terminal-900);
-  --ring: var(--color-terminal-400);
+  --background:         var(--color-navy-50);
+  --foreground:         var(--color-navy-900);
+  --card:               #ffffff;
+  --card-foreground:    var(--color-navy-900);
+  --border:             var(--color-navy-200);
+  --muted:              var(--color-navy-100);
+  --muted-foreground:   var(--color-navy-400);
+  --accent:             var(--color-navy-100);
+  --accent-foreground:  var(--color-navy-900);
+  --ring:               var(--color-brand);
 }
 
+/* ── Dark theme ──────────────────────────────── */
 .dark {
-  --background: #000;
-  --foreground: var(--color-terminal-100);
-  --card: var(--color-terminal-900);
-  --card-foreground: var(--color-terminal-100);
-  --border: var(--color-terminal-800);
-  --muted: var(--color-terminal-850);
-  --muted-foreground: var(--color-terminal-400);
-  --accent: var(--color-terminal-800);
-  --accent-foreground: var(--color-terminal-100);
-  --ring: var(--color-terminal-600);
+  --background:         #070d1a;
+  --foreground:         var(--color-navy-100);
+  --card:               #0d1423;
+  --card-foreground:    var(--color-navy-100);
+  --border:             var(--color-navy-800);
+  --muted:              var(--color-navy-850);
+  --muted-foreground:   var(--color-navy-400);
+  --accent:             var(--color-navy-800);
+  --accent-foreground:  var(--color-navy-100);
+  --ring:               var(--color-brand);
 }
 
+/* ── Base ────────────────────────────────────── */
 * {
   border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -77,59 +95,44 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* Subtle dot grid texture on dark background */
+.dark body {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--color-navy-700) 30%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
 }
 
-/* Focus visible */
+/* ── Focus states ────────────────────────────── */
 *:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+/* ── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-terminal-600);
+  background: var(--color-navy-700);
   border-radius: 3px;
 }
+::-webkit-scrollbar-thumb:hover { background: var(--color-navy-500); }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-terminal-500);
-}
-
-/* Skip link */
+/* ── Skip link ───────────────────────────────── */
 .skip-link {
   position: absolute;
   left: -9999px;
-  top: auto;
   width: 1px;
   height: 1px;
   overflow: hidden;
 }
-
 .skip-link:focus {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: auto;
-  height: auto;
+  top: 0; left: 0;
+  width: auto; height: auto;
   padding: 0.5rem 1rem;
   background: var(--background);
   color: var(--foreground);
@@ -137,65 +140,75 @@ body {
   border: 2px solid var(--ring);
 }
 
-/* Keyframe animations */
+/* ── Reduced motion ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Keyframe animations ─────────────────────── */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 
 @keyframes progress-pulse {
-  0%,
-  80%,
-  100% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  40% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.75); }
+  40%           { opacity: 1;    transform: scale(1);    }
 }
 
 @keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-/* Utility classes for animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-brand) 0%, transparent); }
+  50%      { box-shadow: 0 0 0 4px color-mix(in oklch, var(--color-brand) 25%, transparent); }
+}
+
+/* ── Animation utility classes ───────────────── */
 .animate-shimmer {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--color-terminal-200) 50%,
+    var(--color-navy-200) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }
-
 .dark .animate-shimmer {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--color-terminal-800) 50%,
+    var(--color-navy-750) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }
 
-.animate-progress-pulse {
-  animation: progress-pulse 1.4s ease-in-out infinite;
-}
+.animate-progress-pulse { animation: progress-pulse 1.4s ease-in-out infinite; }
+.animate-spin-slow       { animation: spin-slow 1.5s linear infinite; }
+.animate-fade-in         { animation: fade-in 0.2s ease-out; }
+.animate-slide-up        { animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-pulse-glow      { animation: pulse-glow 2s ease-in-out infinite; }
 
-.animate-spin-slow {
-  animation: spin-slow 1.5s linear infinite;
-}
+/* ── Slide-in/fade-in from Radix (used by Toast, Select) ── */
+.data-\[state\=open\]\:animate-in[data-state=open]       { animation: slide-up 0.2s ease-out; }
+.data-\[state\=closed\]\:animate-out[data-state=closed]  { animation: fade-in 0.15s ease-out reverse; }
