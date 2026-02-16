@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { runAgent, type AgentResponse } from "../agent/agent.js";
-import { scanWatchlist, type ScanResult } from "../analysis/scanner.js";
+import { analyzeWatchlist, type AnalysisResult } from "../analysis/analyzer.js";
 import type { AppConfig, Signal } from "../types/index.js";
 
 function printHeader() {
@@ -9,7 +9,7 @@ function printHeader() {
   console.log(chalk.cyan.bold(`${"=".repeat(60)}\n`));
 }
 
-function printMarketCondition(result: ScanResult) {
+function printMarketCondition(result: AnalysisResult) {
   const mc = result.marketCondition;
   const sp500Color = mc.sp500Change >= 0 ? chalk.green : chalk.red;
   const nasdaqColor = mc.nasdaqChange >= 0 ? chalk.green : chalk.red;
@@ -113,28 +113,28 @@ function printErrors(errors: Array<{ ticker: string; error: string }>) {
   console.log();
 }
 
-export async function runOneScan(config: AppConfig): Promise<void> {
+export async function runOneAnalysis(config: AppConfig): Promise<void> {
   const tickers = [...config.watchlist.stocks, ...config.watchlist.crypto];
   console.log(chalk.dim(`Watchlist: ${tickers.join(", ")}`));
   console.log(chalk.dim(`Portfolio: $${config.risk.portfolioSize.toLocaleString()} | Max Risk: ${(config.risk.maxRiskPerTrade * 100).toFixed(0)}% | Min R:R: ${config.risk.minRiskReward}:1\n`));
 
-  // Step 1: Scan watchlist
-  console.log(chalk.yellow("Scanning watchlist..."));
-  const scanResult = await scanWatchlist(config.watchlist.stocks, config.watchlist.crypto);
+  // Step 1: Analyze watchlist
+  console.log(chalk.yellow("Analyzing watchlist..."));
+  const analysisResult = await analyzeWatchlist(config.watchlist.stocks, config.watchlist.crypto);
 
-  console.log(chalk.green(`Scanned ${scanResult.reports.length} tickers`));
-  printErrors(scanResult.errors);
+  console.log(chalk.green(`Analyzed ${analysisResult.reports.length} tickers`));
+  printErrors(analysisResult.errors);
 
-  printMarketCondition(scanResult);
+  printMarketCondition(analysisResult);
 
-  if (scanResult.reports.length === 0) {
+  if (analysisResult.reports.length === 0) {
     console.log(chalk.red("No data to analyze."));
     return;
   }
 
   // Step 2: Run agent analysis
   console.log(chalk.magenta("Running AI analysis with Claude..."));
-  const response = await runAgent(scanResult.reports);
+  const response = await runAgent(analysisResult.reports);
 
   printSignals(response);
 
@@ -144,20 +144,20 @@ export async function runOneScan(config: AppConfig): Promise<void> {
 export async function startDashboard(config: AppConfig): Promise<void> {
   printHeader();
 
-  await runOneScan(config);
+  await runOneAnalysis(config);
 
   // Auto-refresh loop
-  const intervalMs = config.intervals.scan;
-  console.log(chalk.dim(`\nNext scan in ${Math.round(intervalMs / 1000)}s (Ctrl+C to exit)\n`));
+  const intervalMs = config.intervals.analysis;
+  console.log(chalk.dim(`\nNext analysis in ${Math.round(intervalMs / 1000)}s (Ctrl+C to exit)\n`));
 
   const loop = setInterval(async () => {
     console.log(chalk.dim(`\n${"─".repeat(60)}`));
     console.log(chalk.dim(`Refreshing at ${new Date().toLocaleTimeString()}...\n`));
     try {
-      await runOneScan(config);
-      console.log(chalk.dim(`\nNext scan in ${Math.round(intervalMs / 1000)}s (Ctrl+C to exit)\n`));
+      await runOneAnalysis(config);
+      console.log(chalk.dim(`\nNext analysis in ${Math.round(intervalMs / 1000)}s (Ctrl+C to exit)\n`));
     } catch (err) {
-      console.error(chalk.red("Scan error:"), err);
+      console.error(chalk.red("Analysis error:"), err);
     }
   }, intervalMs);
 

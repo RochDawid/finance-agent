@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { computeTechnicalAnalysis } from "../analysis/indicators.js";
 import { computeLevelAnalysis } from "../analysis/levels.js";
-import { formatReportForAgent } from "../analysis/scanner.js";
+import { formatReportForAgent } from "../analysis/analyzer.js";
 import { computeVolumeAnalysis } from "../analysis/volume.js";
 import { fetchCryptoOHLC, fetchCryptoPrice } from "../data/coingecko.js";
 import { fetchSentimentData, getSentimentSummary } from "../data/sentiment.js";

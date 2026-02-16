@@ -3,7 +3,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
-import { formatReportForAgent } from "../analysis/scanner.js";
+import { formatReportForAgent } from "../analysis/analyzer.js";
 import { loadConfig } from "../config.js";
 import type { AnalysisReport, ModelProvider } from "../types/index.js";
 import { SignalSchema, type Signal } from "../types/index.js";
@@ -65,14 +65,14 @@ function createModel(provider: ModelProvider, modelName: string, apiKey: string)
   }
 }
 
-function buildScanPrompt(reports: AnalysisReport[]): string {
+function buildAnalysisPrompt(reports: AnalysisReport[]): string {
   const reportsText = reports
     .map((r) => formatReportForAgent(r))
     .join("\n\n" + "=".repeat(60) + "\n\n");
 
-  return `Analyze the following watchlist scan data and generate specific, actionable trade signals. Use the provided tools to deep-dive into any ticker that shows potential.
+  return `Analyze the following watchlist analysis data and generate specific, actionable trade signals. Use the provided tools to deep-dive into any ticker that shows potential.
 
-## Watchlist Scan Results
+## Watchlist Analysis Results
 
 ${reportsText}
 
@@ -122,8 +122,8 @@ async function runAgentCore(
 
   const cost = estimateCost(
     modelName,
-    result.usage.inputTokens ?? 0,
-    result.usage.outputTokens ?? 0,
+    result.totalUsage.inputTokens ?? 0,
+    result.totalUsage.outputTokens ?? 0,
   );
 
   return parseAgentResponse(result.text, cost);
@@ -133,7 +133,7 @@ export async function runAgent(
   reports: AnalysisReport[],
   apiKey?: string,
 ): Promise<AgentResponse> {
-  return runAgentCore(buildScanPrompt(reports), apiKey, 10);
+  return runAgentCore(buildAnalysisPrompt(reports), apiKey, 10);
 }
 
 export async function analyzeOneTicker(

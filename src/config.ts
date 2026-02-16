@@ -57,7 +57,7 @@ export function loadConfig(configPath?: string): AppConfig {
         const defaults = {
           watchlist: { stocks: [], crypto: [] },
           risk: { maxRiskPerTrade: 0.01, minRiskReward: 2, portfolioSize: 10000 },
-          intervals: { scan: 3600, dataRefresh: 900 },
+          intervals: { analysis: 3600, dataRefresh: 900 },
           model: { provider: "anthropic" as const, name: "claude-opus-4-6" },
         };
 

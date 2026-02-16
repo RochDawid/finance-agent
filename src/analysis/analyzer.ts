@@ -12,18 +12,18 @@ import type {
   OHLCV,
 } from "../types/index.js";
 
-export interface ScanResult {
+export interface AnalysisResult {
   reports: AnalysisReport[];
   marketCondition: MarketCondition;
   volumeAnalysis: Map<string, VolumeAnalysis>;
   errors: Array<{ ticker: string; error: string }>;
 }
 
-export async function scanWatchlist(
+export async function analyzeWatchlist(
   stocks: string[],
   cryptos: string[],
   timeframe: Timeframe = "1d",
-): Promise<ScanResult> {
+): Promise<AnalysisResult> {
   const errors: Array<{ ticker: string; error: string }> = [];
   const reports: AnalysisReport[] = [];
   const volumeAnalysis = new Map<string, VolumeAnalysis>();
@@ -31,7 +31,7 @@ export async function scanWatchlist(
   // Fetch market condition first
   const marketCondition = await getMarketCondition();
 
-  // Scan stocks/ETFs
+  // Analyze stocks/ETFs
   const stockPromises = stocks.map(async (ticker) => {
     try {
       const [quote, ohlcv] = await Promise.all([
@@ -45,7 +45,7 @@ export async function scanWatchlist(
     }
   });
 
-  // Scan crypto
+  // Analyze crypto
   const cryptoPromises = cryptos.map(async (coinId) => {
     try {
       const [quote, ohlcv] = await Promise.all([

@@ -241,7 +241,7 @@ export interface AppConfig {
   };
   risk: RiskParams;
   intervals: {
-    scan: number;
+    analysis: number;
     dataRefresh: number;
   };
   model: ModelConfig;
