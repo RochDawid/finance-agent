@@ -34,7 +34,7 @@ export async function fetchCryptoPrice(
   );
 
   const coin = data[coinId];
-  if (!coin) throw new Error(`Coin not found: ${coinId}`);
+  if (!coin) throw new Error(`"${coinId}" not found on CoinGecko — verify the coin ID (e.g. "bitcoin", "ethereum") and try again.`);
 
   const price = coin.usd;
   const change = price * (coin.usd_24h_change / 100);

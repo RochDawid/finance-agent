@@ -45,12 +45,21 @@ export async function fetchOHLCV(
 }
 
 export async function fetchQuote(ticker: string): Promise<Quote> {
-  const result = await yahooFinance.quote(ticker);
+  let result;
+  try {
+    result = await yahooFinance.quote(ticker);
+  } catch {
+    throw new Error(`"${ticker}" not found — verify the ticker symbol and try again.`);
+  }
+
+  if (!result?.regularMarketPrice) {
+    throw new Error(`"${ticker}" not found — verify the ticker symbol and try again.`);
+  }
 
   return {
     ticker,
     assetType: inferAssetType(ticker),
-    price: result.regularMarketPrice ?? 0,
+    price: result.regularMarketPrice,
     change: result.regularMarketChange ?? 0,
     changePercent: result.regularMarketChangePercent ?? 0,
     volume: result.regularMarketVolume ?? 0,
