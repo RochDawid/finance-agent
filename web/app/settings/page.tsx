@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, EyeOff, Check } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectSeparator } from "@/components/ui/select";
 import type { AppConfig, ModelProvider } from "@finance/types/index.js";
 
 const PROVIDERS: { value: ModelProvider; label: string; models: string[] }[] = [
@@ -19,12 +20,12 @@ const PROVIDERS: { value: ModelProvider; label: string; models: string[] }[] = [
   {
     value: "openai",
     label: "OpenAI",
-    models: ["gpt-4o", "gpt-4o-mini", "o3-mini"],
+    models: ["gpt-5.2", "gpt-4o", "o3-mini"],
   },
   {
     value: "google",
     label: "Google",
-    models: ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"],
+    models: ["gemini-3-flash-preview", "gemini-3-pro-preview", "gemini-2.5-flash"],
   },
 ];
 
@@ -158,60 +159,39 @@ export default function SettingsPage() {
                   <label className="text-sm text-[var(--muted-foreground)] block mb-1.5">
                     Model
                   </label>
-                  <div className="flex flex-col gap-1.5">
-                    {currentModels.map((m) => (
-                      <label
-                        key={m}
-                        className="flex items-center gap-2.5 cursor-pointer group"
-                      >
-                        <input
-                          type="radio"
-                          name="model"
-                          value={m}
-                          checked={draft.model?.name === m}
-                          onChange={() =>
-                            setDraft({ ...draft, model: { ...draft.model, provider: currentProvider, name: m } })
-                          }
-                          className="accent-[var(--foreground)]"
-                        />
-                        <span className="font-mono text-sm group-hover:text-[var(--foreground)] text-[var(--muted-foreground)] transition-colors">
-                          {m}
-                        </span>
-                      </label>
-                    ))}
-                    <label className="flex items-center gap-2.5 cursor-pointer group mt-1">
-                      <input
-                        type="radio"
-                        name="model"
-                        value="custom"
-                        checked={!currentModels.includes(draft.model?.name ?? "")}
-                        onChange={() => {}}
-                        className="accent-[var(--foreground)]"
-                      />
-                      <Input
-                        value={
-                          currentModels.includes(draft.model?.name ?? "")
-                            ? ""
-                            : (draft.model?.name ?? "")
+                  <div className="space-y-2">
+                    <Select
+                      value={currentModels.includes(draft.model?.name ?? "") ? (draft.model?.name ?? "") : "__custom__"}
+                      onValueChange={(val) => {
+                        if (val === "__custom__") {
+                          setDraft({ ...draft, model: { provider: currentProvider, name: "" } });
+                        } else {
+                          setDraft({ ...draft, model: { provider: currentProvider, name: val } });
                         }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currentModels.map((m) => (
+                          <SelectItem key={m} value={m}>{m}</SelectItem>
+                        ))}
+                        <SelectSeparator />
+                        <SelectItem value="__custom__">Custom model ID...</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {!currentModels.includes(draft.model?.name ?? "") && (
+                      <Input
+                        value={draft.model?.name ?? ""}
                         onChange={(e) =>
                           setDraft({ ...draft, model: { provider: currentProvider, name: e.target.value } })
                         }
-                        onFocus={() =>
-                          setDraft({
-                            ...draft,
-                            model: {
-                              provider: currentProvider,
-                              name: currentModels.includes(draft.model?.name ?? "")
-                                ? ""
-                                : (draft.model?.name ?? ""),
-                            },
-                          })
-                        }
-                        placeholder="Custom model name..."
-                        className="h-7 font-mono text-sm w-64"
+                        placeholder="e.g. claude-opus-4-6"
+                        className="font-mono text-sm"
+                        autoFocus
                       />
-                    </label>
+                    )}
                   </div>
                 </div>
               </CardContent>
