@@ -8,17 +8,20 @@ interface MarketOverviewProps {
   marketCondition: MarketCondition;
 }
 
-function ChangeChip({ label, value }: { label: string; value: number }) {
+function IndexChip({ label, value }: { label: string; value: number }) {
   const positive = value >= 0;
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-xs text-[var(--muted-foreground)]">{label}</span>
-      <span
-        className={cn(
-          "text-xs font-mono font-medium",
-          positive ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
-        )}
-      >
+    <div className={cn(
+      "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs",
+      positive
+        ? "border-[var(--color-bullish)]/20 bg-[var(--color-bullish)]/5"
+        : "border-[var(--color-bearish)]/20 bg-[var(--color-bearish)]/5",
+    )}>
+      <span className="text-[var(--muted-foreground)] font-medium">{label}</span>
+      <span className={cn(
+        "font-mono font-bold",
+        positive ? "text-[var(--color-bullish)]" : "text-[var(--color-bearish)]",
+      )}>
         {formatPercent(value)}
       </span>
     </div>
@@ -30,26 +33,23 @@ export function MarketOverview({ marketCondition }: MarketOverviewProps) {
   const fg = sentiment.fearGreed;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-sm">
-      <ChangeChip label="S&P 500" value={sp500Change} />
-      <span className="text-[var(--border)] select-none">·</span>
-      <ChangeChip label="NASDAQ" value={nasdaqChange} />
+    <div className="flex flex-wrap items-center gap-2">
+      <IndexChip label="S&P 500" value={sp500Change} />
+      <IndexChip label="NASDAQ"  value={nasdaqChange} />
+
       {vixLevel !== undefined && (
-        <>
-          <span className="text-[var(--border)] select-none">·</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-[var(--muted-foreground)]">VIX</span>
-            <span className="text-xs font-mono font-medium">{vixLevel.toFixed(1)}</span>
-          </div>
-        </>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] text-xs">
+          <span className="text-[var(--muted-foreground)] font-medium">VIX</span>
+          <span className="font-mono font-bold">{vixLevel.toFixed(1)}</span>
+        </div>
       )}
-      <span className="text-[var(--border)] select-none">·</span>
-      <div className="flex items-center gap-1.5">
-        <span className="text-xs text-[var(--muted-foreground)]">Fear &amp; Greed</span>
-        <span className="text-xs font-mono font-medium">{fg.value}</span>
-        <span className="text-xs text-[var(--muted-foreground)]">({fg.classification})</span>
+
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] text-xs">
+        <span className="text-[var(--muted-foreground)] font-medium">Fear &amp; Greed</span>
+        <span className="font-mono font-bold">{fg.value}</span>
+        <span className="text-[var(--muted-foreground)]">· {fg.classification}</span>
       </div>
-      <span className="text-[var(--border)] select-none hidden sm:inline">·</span>
+
       <RegimeBadge regime={regime} />
     </div>
   );

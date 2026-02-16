@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import type { OHLCV } from "@finance/types/index.js";
 
 interface CandlestickChartProps {
@@ -20,123 +20,127 @@ interface Overlay {
 
 function CandlestickChartInner({ data, overlays, height = 400, className }: CandlestickChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<ReturnType<typeof import("lightweight-charts").createChart> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
 
-  const initChart = useCallback(async () => {
+  useEffect(() => {
     if (!containerRef.current || data.length === 0) return;
 
-    const { createChart, ColorType, LineStyle } = await import("lightweight-charts");
-
-    // Dispose previous
+    // Synchronously remove any previous chart instance
     if (chartRef.current) {
       chartRef.current.remove();
+      chartRef.current = null;
     }
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let cancelled = false;
 
-    const chart = createChart(containerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "var(--color-terminal-400)",
-        fontFamily: "JetBrains Mono, monospace",
-        fontSize: 11,
-      },
-      grid: {
-        vertLines: { color: "rgba(128,128,128,0.1)" },
-        horzLines: { color: "rgba(128,128,128,0.1)" },
-      },
-      width: containerRef.current.clientWidth,
-      height,
-      crosshair: {
-        mode: 0, // Normal
-      },
-      timeScale: {
-        borderColor: "rgba(128,128,128,0.2)",
-        timeVisible: true,
-      },
-      rightPriceScale: {
-        borderColor: "rgba(128,128,128,0.2)",
-      },
-    });
+    (async () => {
+      const { createChart, ColorType, LineStyle, CandlestickSeries, HistogramSeries } =
+        await import("lightweight-charts");
 
-    chartRef.current = chart;
+      if (cancelled || !containerRef.current) return;
 
-    const candleSeries = chart.addCandlestickSeries({
-      upColor: "oklch(0.72 0.19 145)",
-      downColor: "oklch(0.65 0.2 25)",
-      borderUpColor: "oklch(0.72 0.19 145)",
-      borderDownColor: "oklch(0.65 0.2 25)",
-      wickUpColor: "oklch(0.72 0.19 145)",
-      wickDownColor: "oklch(0.65 0.2 25)",
-    });
+      const chart = createChart(containerRef.current, {
+        autoSize: true,
+        layout: {
+          background: { type: ColorType.Solid, color: "transparent" },
+          textColor: "#6b7280",
+          fontFamily: "JetBrains Mono, monospace",
+          fontSize: 11,
+        },
+        grid: {
+          vertLines: { color: "rgba(128,128,128,0.1)" },
+          horzLines: { color: "rgba(128,128,128,0.1)" },
+        },
+        height,
+        crosshair: { mode: 0 },
+        timeScale: {
+          borderColor: "rgba(128,128,128,0.2)",
+          timeVisible: true,
+        },
+        rightPriceScale: {
+          borderColor: "rgba(128,128,128,0.2)",
+        },
+      });
 
-    const chartData = data.map((d) => ({
-      time: (d.timestamp instanceof Date ? d.timestamp.getTime() / 1000 : new Date(d.timestamp).getTime() / 1000) as import("lightweight-charts").UTCTimestamp,
-      open: d.open,
-      high: d.high,
-      low: d.low,
-      close: d.close,
-    }));
+      chartRef.current = chart;
 
-    candleSeries.setData(chartData);
+      const candleSeries = chart.addSeries(CandlestickSeries, {
+        upColor: "#26a65b",
+        downColor: "#d64040",
+        borderUpColor: "#26a65b",
+        borderDownColor: "#d64040",
+        wickUpColor: "#26a65b",
+        wickDownColor: "#d64040",
+      });
 
-    // Volume
-    const volumeSeries = chart.addHistogramSeries({
-      priceFormat: { type: "volume" },
-      priceScaleId: "volume",
-    });
-
-    chart.priceScale("volume").applyOptions({
-      scaleMargins: { top: 0.8, bottom: 0 },
-    });
-
-    volumeSeries.setData(
-      data.map((d) => ({
-        time: (d.timestamp instanceof Date ? d.timestamp.getTime() / 1000 : new Date(d.timestamp).getTime() / 1000) as import("lightweight-charts").UTCTimestamp,
-        value: d.volume,
-        color: d.close >= d.open ? "rgba(38,166,91,0.3)" : "rgba(214,69,65,0.3)",
-      })),
-    );
-
-    // Overlays (price lines)
-    if (overlays) {
-      for (const overlay of overlays) {
-        candleSeries.createPriceLine({
-          price: overlay.price,
-          color: overlay.color,
-          lineWidth: 1,
-          lineStyle: overlay.style === "dashed" ? LineStyle.Dashed : LineStyle.Solid,
-          axisLabelVisible: true,
-          title: overlay.label,
+      // Sort ascending and deduplicate by timestamp
+      const seen = new Set<number>();
+      const sorted = [...data]
+        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+        .filter((d) => {
+          const t = new Date(d.timestamp).getTime();
+          if (seen.has(t)) return false;
+          seen.add(t);
+          return true;
         });
-      }
-    }
 
-    chart.timeScale().fitContent();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const toTime = (d: OHLCV) => Math.floor(new Date(d.timestamp).getTime() / 1000) as any;
 
-    // Resize observer
-    const ro = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        chart.applyOptions({ width: entry.contentRect.width });
+      candleSeries.setData(
+        sorted.map((d) => ({
+          time: toTime(d),
+          open: d.open,
+          high: d.high,
+          low: d.low,
+          close: d.close,
+        })),
+      );
+
+      const volumeSeries = chart.addSeries(HistogramSeries, {
+        priceFormat: { type: "volume" },
+        priceScaleId: "volume",
+      });
+
+      chart.priceScale("volume").applyOptions({
+        scaleMargins: { top: 0.8, bottom: 0 },
+      });
+
+      volumeSeries.setData(
+        sorted.map((d) => ({
+          time: toTime(d),
+          value: d.volume,
+          color: d.close >= d.open ? "rgba(38,166,91,0.3)" : "rgba(214,69,65,0.3)",
+        })),
+      );
+
+      if (overlays) {
+        for (const overlay of overlays) {
+          candleSeries.createPriceLine({
+            price: overlay.price,
+            color: overlay.color,
+            lineWidth: 1,
+            lineStyle: overlay.style === "dashed" ? LineStyle.Dashed : LineStyle.Solid,
+            axisLabelVisible: true,
+            title: overlay.label,
+          });
+        }
       }
-    });
-    ro.observe(containerRef.current);
+
+      chart.timeScale().fitContent();
+    })();
 
     return () => {
-      ro.disconnect();
-      chart.remove();
+      cancelled = true;
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+      }
     };
   }, [data, overlays, height]);
 
-  useEffect(() => {
-    const cleanup = initChart();
-    return () => {
-      cleanup?.then((fn) => fn?.());
-    };
-  }, [initChart]);
-
-  return <div ref={containerRef} className={className} />;
+  return <div ref={containerRef} style={{ height }} className={className} />;
 }
 
 // Export with dynamic import wrapper

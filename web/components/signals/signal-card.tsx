@@ -2,14 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BiasBadge } from "@/components/data/bias-badge";
 import { ConfidenceMeter } from "@/components/data/confidence-meter";
-import { PriceDisplay } from "@/components/data/price-display";
 import { cn, formatPrice } from "@/lib/utils";
 import type { SignalWithId } from "@/lib/types";
-import type { ReactNode } from "react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface SignalCardProps {
   signal: SignalWithId;
@@ -20,87 +17,107 @@ interface SignalCardProps {
 
 export function SignalCard({ signal, index, selected, className }: SignalCardProps) {
   const router = useRouter();
+  const isLong = signal.direction === "long";
+
   return (
-    <Card
+    <div
       onClick={() => router.push(`/signals/${signal.id}`)}
       className={cn(
-        "transition-all duration-200 hover:shadow-md hover:border-[var(--ring)] cursor-pointer",
-        selected && "border-[var(--ring)] ring-1 ring-[var(--ring)]",
+        "group relative flex cursor-pointer rounded-xl border bg-[var(--card)] overflow-hidden",
+        "transition-all duration-200 hover:shadow-lg hover:-translate-y-px",
+        isLong
+          ? "border-[var(--color-bullish)]/20 hover:border-[var(--color-bullish)]/50 hover:shadow-[var(--color-bullish)]/8"
+          : "border-[var(--color-bearish)]/20 hover:border-[var(--color-bearish)]/50 hover:shadow-[var(--color-bearish)]/8",
+        selected && (isLong ? "border-[var(--color-bullish)]/60" : "border-[var(--color-bearish)]/60"),
         className,
       )}
     >
-      <CardHeader className="pb-2">
-        <SignalCardHeader signal={signal} index={index} />
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <SignalCardLevels signal={signal} />
-        <SignalCardMetrics signal={signal} />
-      </CardContent>
-    </Card>
-  );
-}
+      {/* Direction accent stripe */}
+      <div className={cn(
+        "w-1 shrink-0",
+        isLong ? "bg-[var(--color-bullish)]" : "bg-[var(--color-bearish)]",
+      )} />
 
-function SignalCardHeader({ signal, index }: { signal: SignalWithId; index?: number }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        {index !== undefined && (
-          <span className="text-xs text-[var(--muted-foreground)] font-mono w-4">{index + 1}</span>
-        )}
-        <Link
-          href={`/analysis/${signal.ticker}`}
-          onClick={(e) => e.stopPropagation()}
-          className="hover:underline underline-offset-2"
-        >
-          <CardTitle className="text-lg font-semibold tracking-tight">{signal.ticker}</CardTitle>
-        </Link>
-        <Badge variant={signal.direction === "long" ? "bullish" : "bearish"} className="uppercase text-[10px] ml-1">
-          {signal.direction}
-        </Badge>
-        <Badge variant="secondary" className="text-[10px]">
-          {signal.assetType}
-        </Badge>
+      <div className="flex-1 p-4 space-y-3">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            {index !== undefined && (
+              <span className="text-[10px] font-mono text-[var(--muted-foreground)] w-3.5 shrink-0">{index + 1}</span>
+            )}
+            <Link
+              href={`/analysis/${signal.ticker}`}
+              onClick={(e) => e.stopPropagation()}
+              className="font-bold text-base tracking-tight hover:text-[var(--color-brand)] transition-colors"
+            >
+              {signal.ticker}
+            </Link>
+
+            <div className={cn(
+              "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest",
+              isLong
+                ? "bg-[var(--color-bullish)]/12 text-[var(--color-bullish)]"
+                : "bg-[var(--color-bearish)]/12 text-[var(--color-bearish)]",
+            )}>
+              {isLong ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+              {signal.direction}
+            </div>
+
+            <Badge variant="secondary" className="text-[9px] font-medium uppercase tracking-wide py-0">
+              {signal.assetType}
+            </Badge>
+          </div>
+
+          {/* Entry price */}
+          <div className="text-right shrink-0">
+            <div className="font-mono font-bold text-base">${formatPrice(signal.entryPrice)}</div>
+            <div className="text-[10px] text-[var(--muted-foreground)] font-medium">entry</div>
+          </div>
+        </div>
+
+        {/* Price levels grid */}
+        <div className="grid grid-cols-4 gap-2">
+          <LevelCell label="Stop" value={signal.stopLoss} variant="stop" />
+          <LevelCell label="TP1"  value={signal.takeProfit1} variant="tp" />
+          <LevelCell label="TP2"  value={signal.takeProfit2} variant="tp" />
+          <LevelCell label="TP3"  value={signal.takeProfit3} variant="tp" />
+        </div>
+
+        {/* Metrics row + confidence */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <MetricPill label="R:R" value={`${signal.riskRewardRatio.toFixed(1)}×`} />
+              <MetricPill label="Size" value={`${signal.positionSizePct.toFixed(1)}%`} />
+              <MetricPill label="TF" value={signal.timeframe} />
+            </div>
+          </div>
+          <ConfidenceMeter value={signal.confidenceScore} />
+        </div>
       </div>
-      <PriceDisplay price={signal.entryPrice} size="sm" />
     </div>
   );
 }
 
-function SignalCardLevels({ signal }: { signal: SignalWithId }) {
+function LevelCell({ label, value, variant }: { label: string; value: number; variant: "stop" | "tp" }) {
   return (
-    <div className="grid grid-cols-4 gap-2 text-xs">
-      <div>
-        <div className="text-[var(--muted-foreground)]">Stop</div>
-        <div className="font-mono text-[var(--color-bearish)]">${formatPrice(signal.stopLoss)}</div>
-      </div>
-      <div>
-        <div className="text-[var(--muted-foreground)]">TP1</div>
-        <div className="font-mono text-[var(--color-bullish)]">${formatPrice(signal.takeProfit1)}</div>
-      </div>
-      <div>
-        <div className="text-[var(--muted-foreground)]">TP2</div>
-        <div className="font-mono text-[var(--color-bullish)]">${formatPrice(signal.takeProfit2)}</div>
-      </div>
-      <div>
-        <div className="text-[var(--muted-foreground)]">TP3</div>
-        <div className="font-mono text-[var(--color-bullish)]">${formatPrice(signal.takeProfit3)}</div>
+    <div className="rounded-lg bg-[var(--muted)] px-2 py-1.5">
+      <div className="text-[9px] font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-0.5">{label}</div>
+      <div className={cn(
+        "font-mono text-xs font-semibold",
+        variant === "stop" ? "text-[var(--color-bearish)]" : "text-[var(--color-bullish)]",
+      )}>
+        ${formatPrice(value)}
       </div>
     </div>
   );
 }
 
-function SignalCardMetrics({ signal }: { signal: SignalWithId }) {
+function MetricPill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-[var(--muted-foreground)]">R:R</span>
-        <span className="font-mono">{signal.riskRewardRatio.toFixed(1)}</span>
-        <span className="text-[var(--muted-foreground)]">Size</span>
-        <span className="font-mono">{signal.positionSizePct.toFixed(1)}%</span>
-        <span className="text-[var(--muted-foreground)]">TF</span>
-        <span className="font-mono">{signal.timeframe}</span>
-      </div>
-      <ConfidenceMeter value={signal.confidenceScore} />
+    <div className="flex items-center gap-1">
+      <span className="text-[10px] text-[var(--muted-foreground)]">{label}</span>
+      <span className="text-xs font-mono font-semibold">{value}</span>
     </div>
   );
 }
@@ -118,6 +135,56 @@ function SignalCardReasoning({ signal }: { signal: SignalWithId }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Re-export sub-components used by detail panel
+function SignalCardHeader({ signal, index }: { signal: SignalWithId; index?: number }) {
+  const isLong = signal.direction === "long";
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        {index !== undefined && (
+          <span className="text-xs text-[var(--muted-foreground)] font-mono w-4">{index + 1}</span>
+        )}
+        <Link href={`/analysis/${signal.ticker}`} onClick={(e) => e.stopPropagation()} className="hover:underline underline-offset-2">
+          <span className="font-bold text-lg tracking-tight">{signal.ticker}</span>
+        </Link>
+        <div className={cn(
+          "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest",
+          isLong ? "bg-[var(--color-bullish)]/12 text-[var(--color-bullish)]" : "bg-[var(--color-bearish)]/12 text-[var(--color-bearish)]",
+        )}>
+          {isLong ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+          {signal.direction}
+        </div>
+        <Badge variant="secondary" className="text-[10px]">{signal.assetType}</Badge>
+      </div>
+      <div className="font-mono font-bold text-base">${formatPrice(signal.entryPrice)}</div>
+    </div>
+  );
+}
+
+function SignalCardLevels({ signal }: { signal: SignalWithId }) {
+  return (
+    <div className="grid grid-cols-4 gap-2 text-xs">
+      <LevelCell label="Stop" value={signal.stopLoss} variant="stop" />
+      <LevelCell label="TP1"  value={signal.takeProfit1} variant="tp" />
+      <LevelCell label="TP2"  value={signal.takeProfit2} variant="tp" />
+      <LevelCell label="TP3"  value={signal.takeProfit3} variant="tp" />
+    </div>
+  );
+}
+
+function SignalCardMetrics({ signal }: { signal: SignalWithId }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-4">
+        <MetricPill label="R:R"  value={`${signal.riskRewardRatio.toFixed(1)}×`} />
+        <MetricPill label="Size" value={`${signal.positionSizePct.toFixed(1)}%`} />
+        <MetricPill label="TF"   value={signal.timeframe} />
+      </div>
+      <ConfidenceMeter value={signal.confidenceScore} />
     </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { SignalCard } from "./signal-card";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { SignalWithId } from "@/lib/types";
 
@@ -21,9 +20,7 @@ export function SignalList({ signals, selectedIndex, className }: SignalListProp
 
   const filtered = useMemo(() => {
     let result = [...signals];
-    if (filterDir !== "all") {
-      result = result.filter((s) => s.direction === filterDir);
-    }
+    if (filterDir !== "all") result = result.filter((s) => s.direction === filterDir);
     result.sort((a, b) => {
       if (sortBy === "confidence") return b.confidenceScore - a.confidenceScore;
       if (sortBy === "rr") return b.riskRewardRatio - a.riskRewardRatio;
@@ -34,44 +31,58 @@ export function SignalList({ signals, selectedIndex, className }: SignalListProp
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-[var(--muted-foreground)]">Filter:</span>
+      {/* Controls bar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {/* Filter segmented control */}
+        <div className="flex items-center rounded-lg bg-[var(--muted)] p-0.5 gap-0.5">
           {(["all", "long", "short"] as const).map((dir) => (
-            <Button
+            <button
               key={dir}
-              variant={filterDir === dir ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-2.5 text-xs"
               onClick={() => setFilterDir(dir)}
+              className={cn(
+                "px-3 py-1 rounded-md text-xs font-semibold transition-all duration-150 cursor-pointer capitalize",
+                filterDir === dir
+                  ? dir === "long"
+                    ? "bg-[var(--color-bullish)]/15 text-[var(--color-bullish)] shadow-sm"
+                    : dir === "short"
+                    ? "bg-[var(--color-bearish)]/15 text-[var(--color-bearish)] shadow-sm"
+                    : "bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+              )}
             >
               {dir}
-            </Button>
+            </button>
           ))}
         </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-[var(--muted-foreground)]">Sort:</span>
+
+        {/* Sort segmented control */}
+        <div className="flex items-center rounded-lg bg-[var(--muted)] p-0.5 gap-0.5">
           {([
-            ["confidence", "Conf"],
-            ["rr", "R:R"],
-            ["ticker", "A-Z"],
+            ["confidence", "Confidence"],
+            ["rr",         "R:R"],
+            ["ticker",     "A–Z"],
           ] as const).map(([key, label]) => (
-            <Button
+            <button
               key={key}
-              variant={sortBy === key ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-2.5 text-xs"
               onClick={() => setSortBy(key)}
+              className={cn(
+                "px-3 py-1 rounded-md text-xs font-semibold transition-all duration-150 cursor-pointer",
+                sortBy === key
+                  ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+              )}
             >
               {label}
-            </Button>
+            </button>
           ))}
         </div>
-        <span className="text-xs text-[var(--muted-foreground)] ml-auto">
-          {filtered.length} signal{filtered.length !== 1 ? "s" : ""}
+
+        <span className="text-xs text-[var(--muted-foreground)] ml-auto font-mono">
+          {filtered.length}/{signals.length}
         </span>
       </div>
 
+      {/* Signal cards */}
       <div className="space-y-2">
         {filtered.map((signal, i) => (
           <SignalCard
@@ -82,8 +93,8 @@ export function SignalList({ signals, selectedIndex, className }: SignalListProp
           />
         ))}
         {filtered.length === 0 && (
-          <div className="rounded-lg border border-dashed border-[var(--border)] py-8 text-center text-[var(--muted-foreground)] text-sm">
-            No signals match the current filter
+          <div className="rounded-xl border border-dashed border-[var(--border)] py-10 text-center text-[var(--muted-foreground)] text-sm">
+            No signals match this filter
           </div>
         )}
       </div>
