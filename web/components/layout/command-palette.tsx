@@ -39,7 +39,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       label="Command palette"
       className="fixed inset-0 z-50"
     >
-      <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/50" aria-hidden="true" onClick={() => onOpenChange(false)} />
       <div className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-lg z-50">
         <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] shadow-2xl overflow-hidden">
           <Command.Input
