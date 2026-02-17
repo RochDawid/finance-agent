@@ -41,7 +41,7 @@ export default function RootLayout({
           <QueryProvider>
             <ConfigProvider>
               <WSProvider>
-                <Toaster position="bottom-right" />
+                <Toaster position="bottom-right" options={{ roundness: 14 }} />
                 <AppShell>{children}</AppShell>
               </WSProvider>
             </ConfigProvider>

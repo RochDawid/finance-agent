@@ -210,3 +210,19 @@ body {
 /* ── Slide-in/fade-in from Radix (used by Toast, Select) ── */
 .data-\[state\=open\]\:animate-in[data-state=open]       { animation: slide-up 0.2s ease-out; }
 .data-\[state\=closed\]\:animate-out[data-state=closed]  { animation: fade-in 0.15s ease-out reverse; }
+
+/* ── Sileo toast overrides ───────────────────── */
+:root {
+  /* Align state colors with the design system */
+  --sileo-state-success: #0fd494; /* --color-bullish  */
+  --sileo-state-error:   #f24040; /* --color-bearish  */
+  --sileo-state-warning: #f0a020; /* --color-neutral  */
+  --sileo-state-info:    #6366f1; /* --color-brand    */
+  --sileo-state-action:  #818cf8; /* --color-brand-hover */
+}
+
+/* Toast body — use card surface so it respects light/dark theme */
+[data-sileo-canvas] path { fill: var(--card) !important; }
+
+/* Title — remove forced capitalize; match app font weight */
+[data-sileo-title] { text-transform: none; font-weight: 600; }
