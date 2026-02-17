@@ -41,20 +41,6 @@ const __dirname = dirname(__filename);
 // Load .env from project root (parent of src/)
 dotenv.config({ path: resolve(__dirname, "../.env") });
 
-export function findConfigPath(): string {
-  const projectRoot = resolve(__dirname, "..");
-  const candidates = [
-    resolve(process.cwd(), "config.yaml"),
-    resolve(process.cwd(), "config.default.yaml"),
-    resolve(projectRoot, "config.yaml"),
-    resolve(projectRoot, "config.default.yaml"),
-  ];
-  for (const p of candidates) {
-    if (existsSync(p)) return p;
-  }
-  return resolve(projectRoot, "config.default.yaml");
-}
-
 export function loadConfig(configPath?: string): AppConfig {
   const projectRoot = resolve(__dirname, "..");
   const paths = [
