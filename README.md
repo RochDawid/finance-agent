@@ -1,6 +1,6 @@
 # Finance Agent
 
-AI-powered trading signal agent for day trading and scalping stocks, ETFs, and cryptocurrencies. Uses Claude as the reasoning engine with real-time market data, technical analysis, and a disciplined risk management framework.
+AI-powered trading signal agent for day trading and scalping stocks, ETFs, and cryptocurrencies. Supports Anthropic Claude, OpenAI GPT, and Google Gemini as reasoning engines, combined with real-time market data, technical analysis, and a disciplined risk management framework.
 
 ## Architecture
 
@@ -22,9 +22,10 @@ src/
 │   ├── volume.ts             # Volume profile (POC, value area)
 │   └── scanner.ts            # Watchlist scanner — orchestrates data + analysis
 │
-├── agent/                    # Claude Agent SDK integration
-│   ├── agent.ts              # Agent runner — sends analysis to Claude
-│   ├── tools.ts              # 5 MCP tools the agent can call for deep-dives
+├── agent/                    # AI agent integration
+│   ├── agent.ts              # Agent runner — sends analysis to the configured model
+│   ├── provider.ts           # Model factory — creates Anthropic / OpenAI / Google clients
+│   ├── tools.ts              # 5 tools the agent can call for deep-dives
 │   └── prompts/
 │       ├── system.ts         # Active prompt selector
 │       └── versions/
@@ -36,7 +37,7 @@ src/
 └── evals/                    # Evaluation suite
     ├── helpers.ts            # Deterministic signal validators
     ├── fixtures/scenarios.ts # Test fixtures and synthetic OHLCV generators
-    ├── judges/trade-judge.ts # LLM-as-judge using Claude for signal scoring
+    ├── judges/trade-judge.ts # LLM-as-judge for signal scoring
     ├── signal-quality.eval.ts
     ├── risk-management.eval.ts
     └── reasoning.eval.ts     # LLM judge eval
@@ -44,7 +45,10 @@ src/
 web/                          # Next.js 15 web dashboard
 ├── app/                      # App Router pages
 │   ├── page.tsx              # Main dashboard
-│   ├── settings/             # Settings page
+│   ├── details/[ticker]/     # Ticker detail page
+│   ├── signals/[id]/         # Signal detail page
+│   ├── history/              # Signal history
+│   ├── settings/             # Settings (model, risk params, API keys)
 │   └── watchlist/            # Watchlist management
 ├── components/               # UI component library
 │   ├── charts/               # Candlestick chart, sparklines, Fear & Greed gauge
@@ -60,10 +64,10 @@ web/                          # Next.js 15 web dashboard
 
 ## How It Works
 
-1. **Scan** — Fetches real-time quotes and OHLCV data for your watchlist from Yahoo Finance (stocks/ETFs) and CoinGecko (crypto).
+1. **Scan** — Fetches real-time quotes and OHLCV data for your watchlist from Yahoo Finance (stocks/ETFs) and CoinGecko (crypto). Supports selective scanning of a subset of tickers.
 2. **Analyze** — Runs 15+ technical indicators (EMA, MACD, RSI, Bollinger Bands, ATR, OBV, VWAP, CMF, etc.), computes support/resistance levels (price action, Fibonacci, pivots), and builds a volume profile.
-3. **Reason** — Sends the structured analysis to Claude via the Agent SDK. The agent can call 5 MCP tools to drill deeper into any ticker (different timeframes, levels, sentiment).
-4. **Signal** — Claude applies the system prompt's trading rules (3+ confluence factors, 2.5:1+ R:R, volatility regime adaptation) and returns structured JSON signals with exact entry, stop loss, and 3 take-profit levels.
+3. **Reason** — Sends the structured analysis to the configured AI model via the Vercel AI SDK. The agent can call 5 tools to drill deeper into any ticker (different timeframes, levels, sentiment).
+4. **Signal** — The model applies the system prompt's trading rules (3+ confluence factors, 2.5:1+ R:R, volatility regime adaptation) and returns structured JSON signals with exact entry, stop loss, and 3 take-profit levels.
 5. **Validate** — Signals are validated against a Zod schema to ensure structural correctness.
 6. **Display** — Results are shown in the terminal console UI or streamed live to the Next.js web dashboard via WebSocket.
 
@@ -72,7 +76,7 @@ web/                          # Next.js 15 web dashboard
 ### Prerequisites
 
 - Node.js >= 24
-- An [Anthropic API key](https://console.anthropic.com/)
+- An API key for at least one supported provider: [Anthropic](https://console.anthropic.com/), [OpenAI](https://platform.openai.com/), or [Google AI](https://aistudio.google.com/)
 
 ### Install
 
@@ -80,6 +84,7 @@ web/                          # Next.js 15 web dashboard
 git clone https://github.com/YOUR_USERNAME/finance-agent.git
 cd finance-agent
 npm install
+cd web && npm install
 ```
 
 ### Configure
@@ -88,10 +93,17 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` and add your Anthropic API key:
+Add the API key for your chosen provider:
 
 ```
+# Anthropic (Claude)
 ANTHROPIC_API_KEY=sk-ant-...
+
+# OpenAI
+OPENAI_API_KEY=sk-...
+
+# Google Gemini
+GOOGLE_API_KEY=...
 ```
 
 Copy and customize the config file:
@@ -100,15 +112,31 @@ Copy and customize the config file:
 cp config.default.yaml config.yaml
 ```
 
-## Usage
+Set the provider and model in `config.yaml`:
 
-### One-Shot Scan
-
-Scans the full watchlist, runs AI analysis, and prints trading signals:
-
-```bash
-npm run scan
+```yaml
+model:
+  provider: anthropic   # anthropic | openai | google
+  name: claude-opus-4-6
 ```
+
+Other provider examples:
+
+```yaml
+model:
+  provider: openai
+  name: gpt-4o
+```
+
+```yaml
+model:
+  provider: google
+  name: gemini-2.0-flash
+```
+
+The agent automatically enables extended thinking for Anthropic models that support it. Provider and model can also be changed at runtime from the web UI under **Settings → Model**.
+
+## Usage
 
 ### Terminal Dashboard
 
@@ -118,12 +146,20 @@ Console UI that auto-refreshes on the configured interval:
 npm run dev
 ```
 
+### One-Shot Analysis
+
+Scans the full watchlist, runs AI analysis, and prints trading signals:
+
+```bash
+npm run analyze
+```
+
 ### Web Dashboard
 
 Next.js web dashboard with real-time WebSocket updates, candlestick charts, and interactive signal panels:
 
 ```bash
-cd web && npm install && npm run dev
+cd web && npm run dev
 ```
 
 Then open [http://localhost:3000](http://localhost:3000).
@@ -136,10 +172,17 @@ Run the deterministic eval suite (signal quality + risk management):
 npm run eval
 ```
 
-Run the LLM judge eval (requires `ANTHROPIC_API_KEY`):
+Run the LLM judge eval. By default it uses the provider configured in `config.yaml`. Override with env vars to use a different model for judging:
 
 ```bash
+# Use the configured provider
 npm run eval:judge
+
+# Override provider and model for the judge
+EVAL_PROVIDER=openai EVAL_MODEL=gpt-4o npm run eval:judge
+
+# Use a separate API key just for evals
+EVAL_API_KEY=sk-... npm run eval:judge
 ```
 
 ## System Prompt
@@ -156,7 +199,7 @@ The agent's behavior is controlled by versioned system prompts in `src/agent/pro
 
 ## Eval Framework
 
-The eval suite validates signal quality without calling external APIs:
+The eval suite validates signal quality without calling external APIs (except `reasoning.eval.ts`):
 
 | Suite | Tests | What It Checks |
 |-------|-------|----------------|
@@ -182,30 +225,40 @@ risk:
 
 intervals:
   scan: 300000               # 5 min scan interval (ms)
-  dataRefresh: 60000          # 1 min data refresh (ms)
+  dataRefresh: 60000         # 1 min data refresh (ms)
+
+model:
+  provider: anthropic        # anthropic | openai | google
+  name: claude-opus-4-6
 ```
 
 ### Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | Claude API key |
+| `ANTHROPIC_API_KEY` | If using Anthropic | Claude API key |
+| `OPENAI_API_KEY` | If using OpenAI | OpenAI API key |
+| `GOOGLE_API_KEY` | If using Google | Gemini API key |
 | `ALPHA_VANTAGE_API_KEY` | No | Alpha Vantage key (free tier: 25 req/day) |
 | `COINGECKO_API_KEY` | No | CoinGecko Pro key (free tier works without) |
+| `EVAL_PROVIDER` | No | Override provider for eval judge (anthropic \| openai \| google) |
+| `EVAL_MODEL` | No | Override model name for eval judge |
+| `EVAL_API_KEY` | No | Override API key for eval judge |
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| AI / Agents | Claude Sonnet via `@anthropic-ai/claude-agent-sdk` |
+| AI / Agents | Vercel AI SDK — Anthropic Claude, OpenAI GPT, Google Gemini |
 | Technical Analysis | `technicalindicators` (EMA, MACD, ADX, RSI, BB, ATR, OBV, VWAP, CMF) |
 | Market Data | `yahoo-finance2`, CoinGecko API, Alpha Vantage API |
 | Schema Validation | Zod |
 | Web Dashboard | Next.js 15, React 19, Tailwind CSS 4 |
 | Charting | `lightweight-charts` v5 |
 | UI Components | Radix UI primitives |
+| Toast Notifications | Sileo |
 | Real-time Updates | WebSocket (`ws`) |
-| Testing | Vitest |
+| Testing / Evals | Vitest |
 | Runtime | Node.js >= 24 |
 
 ## Disclaimer
