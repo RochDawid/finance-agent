@@ -16,7 +16,7 @@ const PROVIDER_DISPLAY: Record<string, string> = {
   google: "Gemini",
 };
 
-export async function performAnalysis(apiKey?: string): Promise<void> {
+export async function performAnalysis(apiKey?: string, selectedTickers?: string[]): Promise<void> {
   if (isAnalyzing()) {
     console.log("[analyze] Analysis already in progress, skipping");
     return;
@@ -39,7 +39,17 @@ export async function performAnalysis(apiKey?: string): Promise<void> {
   broadcast("analysis:start", {});
 
   try {
-    const { stocks, crypto } = config.watchlist;
+    const allStocks = config.watchlist.stocks;
+    const allCrypto = config.watchlist.crypto;
+
+    // Filter to selected tickers if provided, otherwise use all
+    const stocks = selectedTickers
+      ? allStocks.filter((s) => selectedTickers.includes(s))
+      : allStocks;
+    const crypto = selectedTickers
+      ? allCrypto.filter((c) => selectedTickers.includes(c))
+      : allCrypto;
+
     const modelLabel = PROVIDER_DISPLAY[provider] ?? provider;
 
     broadcast("analysis:progress", {

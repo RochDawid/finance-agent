@@ -17,6 +17,8 @@ interface WSContextValue {
   state: DashboardState;
   connected: boolean;
   hasApiKey: boolean;
+  selectedTickers: string[] | null;
+  setSelectedTickers: (tickers: string[] | null) => void;
   triggerAnalysis: () => void;
 }
 
@@ -38,6 +40,8 @@ const WSContext = createContext<WSContextValue>({
   state: initialState,
   connected: false,
   hasApiKey: false,
+  selectedTickers: null,
+  setSelectedTickers: () => {},
   triggerAnalysis: () => {},
 });
 
@@ -64,6 +68,7 @@ export function WSProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DashboardState>(initialState);
   const [connected, setConnected] = useState(false);
   const [localHasApiKey, setLocalHasApiKey] = useState(false);
+  const [selectedTickers, setSelectedTickers] = useState<string[] | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -192,14 +197,18 @@ export function WSProvider({ children }: { children: ReactNode }) {
   const triggerAnalysis = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const apiKey = localStorage.getItem(storageKeyFor(provider)) ?? undefined;
-      wsRef.current.send(JSON.stringify({ action: "trigger_analysis", apiKey }));
+      wsRef.current.send(JSON.stringify({
+        action: "trigger_analysis",
+        apiKey,
+        selectedTickers: selectedTickers ?? undefined,
+      }));
     }
-  }, [provider]);
+  }, [provider, selectedTickers]);
 
   const hasApiKey = localHasApiKey || serverHasApiKey;
 
   return (
-    <WSContext value={{ state, connected, hasApiKey, triggerAnalysis }}>
+    <WSContext value={{ state, connected, hasApiKey, selectedTickers, setSelectedTickers, triggerAnalysis }}>
       {children}
     </WSContext>
   );

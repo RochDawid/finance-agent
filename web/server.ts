@@ -42,9 +42,9 @@ wss.on("connection", (ws) => {
 
   ws.on("message", (raw) => {
     try {
-      const msg = JSON.parse(raw.toString()) as { action?: string; apiKey?: string };
+      const msg = JSON.parse(raw.toString()) as { action?: string; apiKey?: string; selectedTickers?: string[] };
       if (msg.action === "trigger_analysis") {
-        import("./lib/analysis-loop.js").then((m) => m.performAnalysis(msg.apiKey));
+        import("./lib/analysis-loop.js").then((m) => m.performAnalysis(msg.apiKey, msg.selectedTickers));
       }
     } catch {
       // ignore malformed messages
