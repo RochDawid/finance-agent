@@ -127,9 +127,40 @@ Then generate specific trade signals if a valid setup exists, or explain why no 
   return runAgentCore(prompt, apiKey, 8);
 }
 
+/**
+ * Extracts the outermost JSON object containing "signals" from arbitrary text
+ * using a brace-depth scanner, avoiding the greedy-regex pitfall where inner
+ * `{}` in field values cause incorrect matches.
+ */
+function extractJsonObject(text: string): string | null {
+  const signalsIdx = text.indexOf('"signals"');
+  if (signalsIdx === -1) return null;
+
+  // Walk backwards from "signals" to find the opening '{' of the enclosing object
+  let start = -1;
+  for (let i = signalsIdx - 1; i >= 0; i--) {
+    if (text[i] === "{") {
+      start = i;
+      break;
+    }
+  }
+  if (start === -1) return null;
+
+  // Walk forward from start, tracking brace depth to find the matching '}'
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === "{") depth++;
+    else if (text[i] === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 function parseAgentResponse(text: string, costUsd: number): AgentResponse {
-  const jsonMatch = text.match(/\{[\s\S]*"signals"[\s\S]*\}/);
-  if (!jsonMatch) {
+  const jsonStr = extractJsonObject(text);
+  if (!jsonStr) {
     return {
       marketOverview: text.slice(0, 500),
       signals: [],
@@ -140,23 +171,27 @@ function parseAgentResponse(text: string, costUsd: number): AgentResponse {
   }
 
   try {
-    const parsed = JSON.parse(jsonMatch[0]);
+    const parsed = JSON.parse(jsonStr);
     const signals: Signal[] = [];
+    let dropped = 0;
 
     if (Array.isArray(parsed.signals)) {
+      const total = parsed.signals.length;
       for (const s of parsed.signals) {
-        try {
-          signals.push(
-            SignalSchema.parse({
-              ...s,
-              timestamp: s.timestamp ?? new Date().toISOString(),
-            }),
-          );
-        } catch {
-          console.warn(
-            `Warning: skipping invalid signal for ${s.ticker ?? "unknown"}`,
-          );
+        const result = SignalSchema.safeParse({
+          ...s,
+          timestamp: s.timestamp ?? new Date().toISOString(),
+        });
+        if (result.success) {
+          signals.push(result.data);
+        } else {
+          dropped++;
         }
+      }
+      if (dropped > 0) {
+        console.warn(
+          `[agent] Dropped ${dropped} of ${total} signals due to validation failures`,
+        );
       }
     }
 
