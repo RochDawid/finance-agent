@@ -222,8 +222,9 @@ body {
   --sileo-state-action:  var(--muted-foreground);
 }
 
-/* Toast body — card surface, light/dark aware */
-[data-sileo-canvas] path { fill: var(--card) !important; }
+/* Toast body — card surface, light/dark aware.
+   Sileo renders rect[data-sileo-pill], not path elements. */
+[data-sileo-pill] { fill: var(--card) !important; }
 
 /* Title — foreground color for full legibility; no forced capitalize */
 [data-sileo-title] {
