@@ -17,11 +17,17 @@ async function fetchJSON<T>(url: string, apiKey?: string): Promise<T> {
     headers["x-cg-demo-api-key"] = apiKey;
   }
 
-  const res = await fetch(url, { headers });
-  if (!res.ok) {
-    throw new Error(`CoinGecko API error: ${res.status} ${res.statusText}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const res = await fetch(url, { headers, signal: controller.signal });
+    if (!res.ok) {
+      throw new Error(`CoinGecko API error: ${res.status} ${res.statusText}`);
+    }
+    return res.json() as Promise<T>;
+  } finally {
+    clearTimeout(timeout);
   }
-  return res.json() as Promise<T>;
 }
 
 export async function fetchCryptoPrice(

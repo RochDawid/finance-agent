@@ -11,7 +11,14 @@ interface FearGreedResponse {
 }
 
 export async function fetchFearGreedIndex(): Promise<FearGreedIndex> {
-  const res = await fetch(FEAR_GREED_URL);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  let res: Response;
+  try {
+    res = await fetch(FEAR_GREED_URL, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!res.ok) {
     throw new Error(`Fear & Greed API error: ${res.status}`);
   }
