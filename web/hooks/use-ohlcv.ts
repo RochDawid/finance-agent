@@ -27,6 +27,7 @@ export function useOHLCV(
     queryKey: ["ohlcv", ticker, timeframe, type],
     queryFn: () => fetcher(`/api/ticker/${ticker}/ohlcv?tf=${timeframe}&type=${type}`),
     enabled: !!ticker,
+    retry: 2,
     refetchInterval: 60_000,
   });
 

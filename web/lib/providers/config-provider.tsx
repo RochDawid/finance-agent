@@ -42,6 +42,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const { data, isLoading, error } = useQuery<AppConfig & { serverHasApiKey?: boolean }>({
     queryKey: ["config"],
     queryFn: () => fetcher("/api/config"),
+    staleTime: 60_000,
   });
 
   const invalidate = useCallback(

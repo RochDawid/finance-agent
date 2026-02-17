@@ -68,7 +68,14 @@ export function WSProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DashboardState>(initialState);
   const [connected, setConnected] = useState(false);
   const [localHasApiKey, setLocalHasApiKey] = useState(false);
-  const [selectedTickers, setSelectedTickers] = useState<string[] | null>(null);
+  const [selectedTickers, setSelectedTickersState] = useState<string[] | null>(() => {
+    try {
+      const saved = localStorage.getItem("selectedTickers");
+      return saved ? (JSON.parse(saved) as string[]) : null;
+    } catch {
+      return null;
+    }
+  });
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -193,6 +200,19 @@ export function WSProvider({ children }: { children: ReactNode }) {
       wsRef.current?.close();
     };
   }, [connect]);
+
+  const setSelectedTickers = useCallback((tickers: string[] | null) => {
+    setSelectedTickersState(tickers);
+    try {
+      if (tickers === null) {
+        localStorage.removeItem("selectedTickers");
+      } else {
+        localStorage.setItem("selectedTickers", JSON.stringify(tickers));
+      }
+    } catch {
+      // localStorage unavailable (e.g. private browsing quota exceeded)
+    }
+  }, []);
 
   const triggerAnalysis = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {

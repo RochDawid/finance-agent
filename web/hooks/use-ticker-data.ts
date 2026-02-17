@@ -25,6 +25,7 @@ export function useTickerData(ticker: string | null, assetType: "stock" | "crypt
     queryKey: ["ticker", ticker, assetType],
     queryFn: () => fetcher(`/api/ticker/${ticker}?type=${assetType}`),
     enabled: !!ticker,
+    retry: 2,
     refetchInterval: 30_000,
   });
 
