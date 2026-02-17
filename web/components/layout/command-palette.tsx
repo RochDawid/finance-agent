@@ -94,7 +94,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   <Command.Item
                     key={ticker}
                     value={ticker}
-                    onSelect={() => navigate(`/analysis/${ticker}`)}
+                    onSelect={() => navigate(`/details/${ticker}`)}
                     className="flex items-center gap-2 px-2 py-1.5 text-sm rounded cursor-pointer aria-selected:bg-[var(--accent)] font-mono"
                   >
                     <BarChart3 className="h-4 w-4" />

@@ -46,7 +46,7 @@ export function TickerCard({ ticker, assetType, onRemove }: TickerCardProps) {
       </div>
 
       <Link
-        href={`/analysis/${ticker}`}
+        href={`/details/${ticker}`}
         className="block"
         title={`View ${ticker} details`}
       >

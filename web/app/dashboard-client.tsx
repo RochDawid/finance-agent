@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { useWS } from "@/lib/providers/ws-provider";
 import { useConfig } from "@/lib/providers/config-provider";
 import { MarketOverview } from "@/components/market/market-overview";
@@ -8,7 +9,7 @@ import { AnalysisStatus } from "@/components/layout/analysis-status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Activity, TrendingUp, BarChart3, Zap, KeyRound, AlertCircle, ShieldCheck } from "lucide-react";
+import { Activity, TrendingUp, BarChart3, Zap, KeyRound, AlertCircle, ShieldCheck, SlidersHorizontal, Check } from "lucide-react";
 import Link from "next/link";
 import { cn, formatPrice, formatPercent } from "@/lib/utils";
 
@@ -19,9 +20,20 @@ const PROVIDER_LABELS: Record<string, string> = {
 };
 
 export function DashboardClient() {
-  const { state, triggerAnalysis, hasApiKey } = useWS();
+  const { state, triggerAnalysis, hasApiKey, selectedTickers, setSelectedTickers } = useWS();
   const { config } = useConfig();
   const { analysisError } = state;
+
+  const allTickers = config
+    ? [...config.watchlist.stocks, ...config.watchlist.crypto]
+    : [];
+  // null = all tickers selected
+  const effectiveSelected = selectedTickers ?? allTickers;
+  const isFiltered = selectedTickers !== null && selectedTickers.length < allTickers.length;
+
+  const analyzeLabel = isFiltered
+    ? `Analyze ${effectiveSelected.length} ticker${effectiveSelected.length === 1 ? "" : "s"}`
+    : "Analyze Watchlist";
 
   const hasData = state.signals.length > 0 || state.marketCondition !== null;
 
@@ -65,15 +77,24 @@ export function DashboardClient() {
           </Link>
         )}
 
-        <Button
-          size="lg"
-          onClick={triggerAnalysis}
-          disabled={!hasApiKey}
-          className="gap-2 px-8 font-semibold bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-white border-0 shadow-lg shadow-[var(--color-brand)]/20"
-        >
-          <Zap className="h-4 w-4" />
-          Analyze Watchlist
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="lg"
+            onClick={triggerAnalysis}
+            disabled={!hasApiKey || effectiveSelected.length === 0}
+            className="gap-2 px-8 font-semibold bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-white border-0 shadow-lg shadow-[var(--color-brand)]/20"
+          >
+            <Zap className="h-4 w-4" />
+            {analyzeLabel}
+          </Button>
+          {allTickers.length > 0 && (
+            <TickerFilter
+              tickers={allTickers}
+              selected={effectiveSelected}
+              onChange={(t) => setSelectedTickers(t.length === allTickers.length ? null : t)}
+            />
+          )}
+        </div>
 
         {hasApiKey && (
           <p className="mt-3 text-xs text-[var(--muted-foreground)]">
@@ -116,13 +137,24 @@ export function DashboardClient() {
       )}
 
       {/* Analysis status */}
-      <AnalysisStatus
-        isAnalyzing={state.isAnalyzing}
-        lastAnalysisTime={state.lastAnalysisTime}
-        analysisStage={state.analysisStage}
-        analysisMessage={state.analysisMessage}
-        onAnalyze={triggerAnalysis}
-      />
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <AnalysisStatus
+            isAnalyzing={state.isAnalyzing}
+            lastAnalysisTime={state.lastAnalysisTime}
+            analysisStage={state.analysisStage}
+            analysisMessage={state.analysisMessage}
+            onAnalyze={triggerAnalysis}
+          />
+        </div>
+        {!state.isAnalyzing && allTickers.length > 0 && (
+          <TickerFilter
+            tickers={allTickers}
+            selected={effectiveSelected}
+            onChange={(t) => setSelectedTickers(t.length === allTickers.length ? null : t)}
+          />
+        )}
+      </div>
 
       {/* Market overview */}
       {state.marketCondition && (
@@ -136,7 +168,7 @@ export function DashboardClient() {
         <section aria-label="Watchlist prices">
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 gap-2">
             {state.isAnalyzing && config
-              ? [...config.watchlist.stocks, ...config.watchlist.crypto].map((ticker) => {
+              ? effectiveSelected.map((ticker) => {
                   const report = state.reports.find((r) => r.ticker === ticker);
                   if (report) {
                     return <TickerPill key={ticker} ticker={ticker} quote={report.quote} />;
@@ -234,11 +266,117 @@ export function DashboardClient() {
   );
 }
 
+function TickerFilter({
+  tickers,
+  selected,
+  onChange,
+}: {
+  tickers: string[];
+  selected: string[];
+  onChange: (tickers: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const toggle = (ticker: string) => {
+    if (selected.includes(ticker)) {
+      onChange(selected.filter((t) => t !== ticker));
+    } else {
+      onChange([...selected, ticker]);
+    }
+  };
+
+  const allSelected = selected.length === tickers.length;
+  const noneSelected = selected.length === 0;
+  const isFiltered = !allSelected;
+
+  return (
+    <div className="relative" ref={ref}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          "gap-1.5 h-7 text-xs shrink-0",
+          isFiltered
+            ? "text-[var(--color-brand)] hover:text-[var(--color-brand)]"
+            : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+        )}
+      >
+        <SlidersHorizontal className="h-3 w-3" />
+        {isFiltered ? `${selected.length} of ${tickers.length}` : "Filter"}
+      </Button>
+
+      {open && (
+        <div className={cn(
+          "absolute right-0 z-50 mt-1 w-56 rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg",
+          "animate-fade-in",
+        )}>
+          {/* Header */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
+            <span className="text-xs font-medium text-[var(--muted-foreground)]">Tickers to analyze</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onChange(tickers)}
+                disabled={allSelected}
+                className="text-[10px] text-[var(--color-brand)] hover:underline disabled:opacity-40 disabled:no-underline"
+              >
+                All
+              </button>
+              <button
+                onClick={() => onChange([])}
+                disabled={noneSelected}
+                className="text-[10px] text-[var(--muted-foreground)] hover:underline disabled:opacity-40 disabled:no-underline"
+              >
+                None
+              </button>
+            </div>
+          </div>
+
+          {/* Ticker list */}
+          <div className="p-1.5 max-h-64 overflow-y-auto">
+            {tickers.map((ticker) => {
+              const isSelected = selected.includes(ticker);
+              return (
+                <button
+                  key={ticker}
+                  onClick={() => toggle(ticker)}
+                  className={cn(
+                    "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors",
+                    isSelected
+                      ? "bg-[var(--color-brand)]/8 text-[var(--foreground)]"
+                      : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
+                  )}
+                >
+                  <span className="font-mono font-semibold">{ticker}</span>
+                  {isSelected && <Check className="h-3 w-3 text-[var(--color-brand)] shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TickerPill({ ticker, quote }: { ticker: string; quote: { price: number; changePercent: number } }) {
   const positive = quote.changePercent >= 0;
   return (
     <Link
-      href={`/analysis/${ticker}`}
+      href={`/details/${ticker}`}
       className={cn(
         "flex flex-col gap-0.5 rounded-xl border px-3 py-2.5 transition-all duration-150",
         "hover:shadow-md hover:-translate-y-px",

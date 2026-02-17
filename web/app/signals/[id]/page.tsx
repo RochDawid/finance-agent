@@ -53,7 +53,7 @@ export default function SignalDetailPage() {
           <ArrowLeft className="h-4 w-4 mr-1" /> Back
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/analysis/${signal.ticker}`}>
+          <Link href={`/details/${signal.ticker}`}>
             <BarChart3 className="h-4 w-4 mr-1" /> Analysis
           </Link>
         </Button>

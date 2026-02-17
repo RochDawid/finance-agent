@@ -46,7 +46,7 @@ export function SignalCard({ signal, index, selected, className }: SignalCardPro
               <span className="text-[10px] font-mono text-[var(--muted-foreground)] w-3.5 shrink-0">{index + 1}</span>
             )}
             <Link
-              href={`/analysis/${signal.ticker}`}
+              href={`/details/${signal.ticker}`}
               onClick={(e) => e.stopPropagation()}
               className="font-bold text-base tracking-tight hover:text-[var(--color-brand)] transition-colors"
             >
@@ -148,7 +148,7 @@ function SignalCardHeader({ signal, index }: { signal: SignalWithId; index?: num
         {index !== undefined && (
           <span className="text-xs text-[var(--muted-foreground)] font-mono w-4">{index + 1}</span>
         )}
-        <Link href={`/analysis/${signal.ticker}`} onClick={(e) => e.stopPropagation()} className="hover:underline underline-offset-2">
+        <Link href={`/details/${signal.ticker}`} onClick={(e) => e.stopPropagation()} className="hover:underline underline-offset-2">
           <span className="font-bold text-lg tracking-tight">{signal.ticker}</span>
         </Link>
         <div className={cn(

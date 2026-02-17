@@ -19,7 +19,7 @@ export function SignalDetailPanel({ signal }: SignalDetailPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href={`/analysis/${signal.ticker}`} className="hover:underline underline-offset-2">
+          <Link href={`/details/${signal.ticker}`} className="hover:underline underline-offset-2">
             <h1 className="text-2xl font-bold">{signal.ticker}</h1>
           </Link>
           <Badge variant={signal.direction === "long" ? "bullish" : "bearish"} className="uppercase">
