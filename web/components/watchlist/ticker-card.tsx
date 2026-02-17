@@ -48,7 +48,7 @@ export function TickerCard({ ticker, assetType, onRemove }: TickerCardProps) {
       <Link
         href={`/analysis/${ticker}`}
         className="block"
-        title={`View ${ticker} analysis`}
+        title={`View ${ticker} details`}
       >
         <div className="px-3 pt-3 pb-2.5 hover:bg-[var(--accent)] transition-colors rounded-[inherit]">
           <div className="mb-1.5">
@@ -71,9 +71,9 @@ export function TickerCard({ ticker, assetType, onRemove }: TickerCardProps) {
             <p className="text-xs text-[var(--muted-foreground)]">Failed to load</p>
           )}
 
-          {/* "View analysis" hint */}
+          {/* "View details" hint */}
           <div className="mt-2 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="text-[10px] text-[var(--muted-foreground)]">Analysis</span>
+            <span className="text-[10px] text-[var(--muted-foreground)]">Details</span>
             <ArrowUpRight className="h-3 w-3 text-[var(--muted-foreground)]" />
           </div>
         </div>
