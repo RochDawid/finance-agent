@@ -213,16 +213,21 @@ body {
 
 /* ── Sileo toast overrides ───────────────────── */
 :root {
-  /* Align state colors with the design system */
-  --sileo-state-success: #0fd494; /* --color-bullish  */
-  --sileo-state-error:   #f24040; /* --color-bearish  */
-  --sileo-state-warning: #f0a020; /* --color-neutral  */
-  --sileo-state-info:    #6366f1; /* --color-brand    */
-  --sileo-state-action:  #818cf8; /* --color-brand-hover */
+  /* Monochrome — all types share a single muted neutral tone;
+     intent is communicated by the icon shape, not by color */
+  --sileo-state-success: var(--muted-foreground);
+  --sileo-state-error:   var(--muted-foreground);
+  --sileo-state-warning: var(--muted-foreground);
+  --sileo-state-info:    var(--muted-foreground);
+  --sileo-state-action:  var(--muted-foreground);
 }
 
-/* Toast body — use card surface so it respects light/dark theme */
+/* Toast body — card surface, light/dark aware */
 [data-sileo-canvas] path { fill: var(--card) !important; }
 
-/* Title — remove forced capitalize; match app font weight */
-[data-sileo-title] { text-transform: none; font-weight: 600; }
+/* Title — foreground color for full legibility; no forced capitalize */
+[data-sileo-title] {
+  text-transform: none;
+  font-weight: 600;
+  --sileo-tone: var(--foreground);
+}
