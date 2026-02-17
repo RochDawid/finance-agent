@@ -1,5 +1,6 @@
 watchlist:
-  stocks: []
+  stocks:
+    - PLTR
   crypto:
     - bitcoin
     - ethereum
