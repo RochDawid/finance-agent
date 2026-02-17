@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,7 @@ interface SignalCardProps {
   className?: string;
 }
 
-export function SignalCard({ signal, index, selected, className }: SignalCardProps) {
+export const SignalCard = memo(function SignalCard({ signal, index, selected, className }: SignalCardProps) {
   const router = useRouter();
   const isLong = signal.direction === "long";
 
@@ -97,7 +98,7 @@ export function SignalCard({ signal, index, selected, className }: SignalCardPro
       </div>
     </div>
   );
-}
+});
 
 function LevelCell({ label, value, variant }: { label: string; value: number; variant: "stop" | "tp" }) {
   return (

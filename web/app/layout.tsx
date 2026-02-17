@@ -6,6 +6,7 @@ import { WSProvider } from "@/lib/providers/ws-provider";
 import { ConfigProvider } from "@/lib/providers/config-provider";
 import { Toaster } from "sileo";
 import { AppShell } from "@/components/layout/app-shell";
+import { ErrorBoundary } from "@/components/layout/error-boundary";
 import "sileo/styles.css";
 import "./globals.css";
 
@@ -42,7 +43,9 @@ export default function RootLayout({
             <ConfigProvider>
               <WSProvider>
                 <Toaster position="bottom-right" options={{ roundness: 14 }} />
-                <AppShell>{children}</AppShell>
+                <ErrorBoundary>
+                  <AppShell>{children}</AppShell>
+                </ErrorBoundary>
               </WSProvider>
             </ConfigProvider>
           </QueryProvider>
