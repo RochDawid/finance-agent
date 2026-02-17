@@ -1,6 +1,7 @@
 import { generateText } from "ai";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import type { EvalScore, Signal } from "../../types/index.js";
+import { loadConfig } from "../../config.js";
+import { createModel, getApiKey } from "../../agent/provider.js";
+import type { EvalScore, ModelProvider, Signal } from "../../types/index.js";
 import { computeEvalScore } from "../helpers.js";
 
 const JUDGE_PROMPT = `You are an expert trading signal evaluator. You will be given a trading signal and must score it across 5 dimensions, each from 0-10.
@@ -50,8 +51,22 @@ Return ONLY a JSON object with this exact structure:
 }`;
 
 export async function judgeSignal(signal: Signal): Promise<EvalScore> {
-  const anthropic = createAnthropic();
-  const model = anthropic("claude-opus-4-6");
+  const config = loadConfig();
+
+  // Allow overriding provider/model for local eval runs via env vars.
+  // Falls back to the provider and model configured in config.yaml.
+  const provider = (process.env.EVAL_PROVIDER ?? config.model.provider) as ModelProvider;
+  const modelName = process.env.EVAL_MODEL ?? config.model.name;
+  const apiKey = process.env.EVAL_API_KEY ?? getApiKey(provider);
+
+  if (!apiKey) {
+    throw new Error(
+      `No API key for eval provider "${provider}". ` +
+        `Set ${provider.toUpperCase()}_API_KEY or EVAL_API_KEY in your .env.`,
+    );
+  }
+
+  const model = createModel(provider, modelName, apiKey);
 
   const { text } = await generateText({
     model,

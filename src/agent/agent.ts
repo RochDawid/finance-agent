@@ -1,11 +1,8 @@
 import { generateText, stepCountIs } from "ai";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-
 import { formatReportForAgent } from "../analysis/analyzer.js";
 import { loadConfig } from "../config.js";
-import type { AnalysisReport, ModelProvider } from "../types/index.js";
+import type { AnalysisReport } from "../types/index.js";
+import { createModel, getApiKey } from "./provider.js";
 import { SignalSchema, type Signal } from "../types/index.js";
 import { SYSTEM_PROMPT } from "./prompts/system.js";
 import { tradingTools } from "./tools.js";
@@ -43,28 +40,6 @@ function estimateCost(
   );
 }
 
-function getEnvKey(provider: ModelProvider): string | undefined {
-  switch (provider) {
-    case "anthropic":
-      return process.env.ANTHROPIC_API_KEY;
-    case "openai":
-      return process.env.OPENAI_API_KEY;
-    case "google":
-      return process.env.GOOGLE_API_KEY;
-  }
-}
-
-function createModel(provider: ModelProvider, modelName: string, apiKey: string) {
-  switch (provider) {
-    case "anthropic":
-      return createAnthropic({ apiKey })(modelName);
-    case "openai":
-      return createOpenAI({ apiKey })(modelName);
-    case "google":
-      return createGoogleGenerativeAI({ apiKey })(modelName);
-  }
-}
-
 function buildAnalysisPrompt(reports: AnalysisReport[]): string {
   const reportsText = reports
     .map((r) => formatReportForAgent(r))
@@ -95,7 +70,7 @@ async function runAgentCore(
   const config = loadConfig();
   const { provider, name: modelName } = config.model;
 
-  const effectiveKey = apiKey ?? getEnvKey(provider);
+  const effectiveKey = apiKey ?? getApiKey(provider);
   if (!effectiveKey) {
     throw new Error(
       `No API key provided for provider "${provider}". ` +
