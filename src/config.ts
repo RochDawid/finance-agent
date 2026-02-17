@@ -3,7 +3,37 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
+import { z } from "zod/v4";
 import type { AppConfig } from "./types/index.js";
+
+const AppConfigSchema = z.object({
+  watchlist: z.object({
+    stocks: z.array(z.string()).default([]),
+    crypto: z.array(z.string()).default([]),
+  }).refine(
+    (w) => w.stocks.length + w.crypto.length >= 1,
+    { message: "watchlist must contain at least one ticker (stocks or crypto)" },
+  ),
+  risk: z.object({
+    maxRiskPerTrade: z.number().positive(),
+    minRiskReward: z.number().positive(),
+    portfolioSize: z.number().positive(),
+    maxOpenPositions: z.number().positive().optional(),
+    maxCorrelatedPositions: z.number().positive().optional(),
+  }),
+  intervals: z.object({
+    analysis: z.number().positive(),
+    dataRefresh: z.number().positive(),
+  }),
+  model: z.object({
+    provider: z.enum(["anthropic", "openai", "google"]),
+    name: z.string().min(1),
+  }),
+  apiKeys: z.object({
+    alphaVantage: z.string().optional(),
+    coinGecko: z.string().optional(),
+  }).default({}),
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -62,7 +92,7 @@ export function loadConfig(configPath?: string): AppConfig {
         };
 
         // 2. Merge defaults with parsed config
-        const finalConfig: AppConfig = {
+        const merged = {
           ...parsed,
           watchlist: { ...defaults.watchlist, ...(parsed.watchlist ?? {}) },
           risk: { ...defaults.risk, ...(parsed.risk ?? {}) },
@@ -70,6 +100,10 @@ export function loadConfig(configPath?: string): AppConfig {
           model: { ...defaults.model, ...(parsed.model ?? {}) },
           apiKeys: mergedApiKeys,
         };
+
+        // 3. Validate with Zod schema
+        const validated = AppConfigSchema.parse(merged);
+        const finalConfig: AppConfig = validated as AppConfig;
 
         return finalConfig;
       } catch (err) {

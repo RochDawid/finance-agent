@@ -141,8 +141,8 @@ export function WSProvider({ children }: { children: ReactNode }) {
             break;
           }
         }
-      } catch {
-        // ignore parse errors
+      } catch (err) {
+        console.error("[ws] Failed to parse message:", err);
       }
     };
 

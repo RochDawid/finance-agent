@@ -103,6 +103,7 @@ function buildReport(
 
 async function getMarketCondition(): Promise<MarketCondition> {
   let sentiment;
+  let sentimentUnavailable = false;
   try {
     sentiment = await fetchSentimentData();
   } catch (err) {
@@ -110,6 +111,7 @@ async function getMarketCondition(): Promise<MarketCondition> {
     sentiment = {
       fearGreed: { value: 50, classification: "Neutral", timestamp: new Date() },
     };
+    sentimentUnavailable = true;
   }
 
   let sp500Change = 0;
@@ -141,6 +143,7 @@ async function getMarketCondition(): Promise<MarketCondition> {
     sp500Change,
     nasdaqChange,
     sentiment,
+    ...(sentimentUnavailable && { sentimentUnavailable: true }),
     timestamp: new Date(),
   };
 }
@@ -183,6 +186,9 @@ export function formatReportForAgent(report: AnalysisReport): string {
     `Pivot: PP=$${levels.pivots.pivot.toFixed(2)}, R1=$${levels.pivots.r1.toFixed(2)}, S1=$${levels.pivots.s1.toFixed(2)}`,
     "",
     `Overall Bias: ${technicals.overallBias.toUpperCase()} (Confluence: ${technicals.confluenceScore}/10)`,
+    ...(report.marketCondition.sentimentUnavailable
+      ? ["", "[WARN: sentiment data unavailable — Fear & Greed Index shows synthetic neutral value of 50]"]
+      : []),
   ];
 
   return lines.join("\n");

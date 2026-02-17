@@ -202,6 +202,7 @@ export interface MarketCondition {
   vixLevel?: number;
   btcDominance?: number;
   sentiment: SentimentData;
+  sentimentUnavailable?: boolean;
   timestamp: Date;
 }
 
