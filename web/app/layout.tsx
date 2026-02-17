@@ -4,8 +4,9 @@ import { ThemeProvider } from "@/lib/providers/theme-provider";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { WSProvider } from "@/lib/providers/ws-provider";
 import { ConfigProvider } from "@/lib/providers/config-provider";
-import { ToastProvider } from "@/lib/providers/toast-provider";
+import { Toaster } from "sileo";
 import { AppShell } from "@/components/layout/app-shell";
+import "sileo/styles.css";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -40,9 +41,8 @@ export default function RootLayout({
           <QueryProvider>
             <ConfigProvider>
               <WSProvider>
-                <ToastProvider>
-                  <AppShell>{children}</AppShell>
-                </ToastProvider>
+                <Toaster position="bottom-right" />
+                <AppShell>{children}</AppShell>
               </WSProvider>
             </ConfigProvider>
           </QueryProvider>

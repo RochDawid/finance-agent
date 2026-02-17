@@ -44,7 +44,6 @@
   --animate-progress-pulse: progress-pulse 1.4s ease-in-out infinite;
   --animate-spin-slow:      spin-slow 1.5s linear infinite;
   --animate-fade-in:        fade-in 0.2s ease-out;
-  --animate-slide-up:       slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-pulse-glow:     pulse-glow 2s ease-in-out infinite;
 }
 
@@ -206,7 +205,6 @@ body {
 .animate-progress-pulse { animation: progress-pulse 1.4s ease-in-out infinite; }
 .animate-spin-slow       { animation: spin-slow 1.5s linear infinite; }
 .animate-fade-in         { animation: fade-in 0.2s ease-out; }
-.animate-slide-up        { animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
 .animate-pulse-glow      { animation: pulse-glow 2s ease-in-out infinite; }
 
 /* ── Slide-in/fade-in from Radix (used by Toast, Select) ── */

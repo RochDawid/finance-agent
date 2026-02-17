@@ -1,14 +1,13 @@
 "use client";
 
 import { useConfig } from "@/lib/providers/config-provider";
-import { useToast } from "@/lib/providers/toast-provider";
+import { sileo } from "sileo";
 import { AddTickerDialog } from "@/components/watchlist/add-ticker-form";
 import { TickerCard } from "@/components/watchlist/ticker-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WatchlistPage() {
   const { config, isLoading, addTicker, removeTicker } = useConfig();
-  const { toast, confirm } = useToast();
 
   if (isLoading || !config) {
     return (
@@ -40,13 +39,19 @@ export default function WatchlistPage() {
               ticker={ticker}
               assetType="stock"
               onRemove={() => {
-                confirm(`Remove ${ticker} from watchlist?`, async () => {
-                  try {
-                    await removeTicker(ticker, "stocks");
-                    toast(`${ticker} removed`);
-                  } catch {
-                    toast("Failed to remove ticker", "error");
-                  }
+                sileo.action({
+                  title: `Remove ${ticker} from watchlist?`,
+                  button: {
+                    title: "Remove",
+                    onClick: async () => {
+                      try {
+                        await removeTicker(ticker, "stocks");
+                        sileo.success({ title: `${ticker} removed` });
+                      } catch {
+                        sileo.error({ title: "Failed to remove ticker" });
+                      }
+                    },
+                  },
                 });
               }}
             />
@@ -65,13 +70,19 @@ export default function WatchlistPage() {
               ticker={ticker}
               assetType="crypto"
               onRemove={() => {
-                confirm(`Remove ${ticker} from watchlist?`, async () => {
-                  try {
-                    await removeTicker(ticker, "crypto");
-                    toast(`${ticker} removed`);
-                  } catch {
-                    toast("Failed to remove ticker", "error");
-                  }
+                sileo.action({
+                  title: `Remove ${ticker} from watchlist?`,
+                  button: {
+                    title: "Remove",
+                    onClick: async () => {
+                      try {
+                        await removeTicker(ticker, "crypto");
+                        sileo.success({ title: `${ticker} removed` });
+                      } catch {
+                        sileo.error({ title: "Failed to remove ticker" });
+                      }
+                    },
+                  },
                 });
               }}
             />

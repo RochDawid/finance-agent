@@ -12,7 +12,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { useToast } from "@/lib/providers/toast-provider";
+import { sileo } from "sileo";
 import { cn } from "@/lib/utils";
 
 interface AddTickerDialogProps {
@@ -26,7 +26,6 @@ const STOCK_REGEX = /^[A-Z]{1,5}(\.[A-Z]{1,2})?$/;
 const CRYPTO_REGEX = /^[a-z][a-z0-9-]{0,49}$/;
 
 export function AddTickerDialog({ onAdd, existingTickers }: AddTickerDialogProps) {
-  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [ticker, setTicker] = useState("");
   const [type, setType] = useState<"stocks" | "crypto">("stocks");
@@ -86,7 +85,7 @@ export function AddTickerDialog({ onAdd, existingTickers }: AddTickerDialogProps
       }
       await onAdd(trimmed, type);
       handleOpenChange(false);
-      toast(`${trimmed} added to watchlist`);
+      sileo.success({ title: `${trimmed} added to watchlist` });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not verify ticker");
     } finally {
