@@ -40,7 +40,7 @@ export async function analyzeWatchlist(
       ]);
       return buildReport(ticker, quote, ohlcv, timeframe, marketCondition);
     } catch (err) {
-      errors.push({ ticker, error: String(err) });
+      errors.push({ ticker, error: err instanceof Error ? err.message : String(err) });
       return null;
     }
   });

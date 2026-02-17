@@ -22,27 +22,31 @@ export const tradingTools = {
         .describe("Candle timeframe"),
     }),
     execute: async ({ ticker, timeframe }) => {
-      const [data, quote] = await Promise.all([
-        fetchOHLCV(ticker, timeframe as Timeframe),
-        fetchQuote(ticker),
-      ]);
-      return {
-        ticker,
-        currentPrice: quote.price,
-        change: quote.changePercent.toFixed(2) + "%",
-        volume: quote.volume,
-        avgVolume: quote.avgVolume,
-        bars: data.length,
-        lastBar: data[data.length - 1],
-        recentBars: data.slice(-5).map((d) => ({
-          date: d.timestamp.toISOString().split("T")[0],
-          O: d.open.toFixed(2),
-          H: d.high.toFixed(2),
-          L: d.low.toFixed(2),
-          C: d.close.toFixed(2),
-          V: d.volume,
-        })),
-      };
+      try {
+        const [data, quote] = await Promise.all([
+          fetchOHLCV(ticker, timeframe as Timeframe),
+          fetchQuote(ticker),
+        ]);
+        return {
+          ticker,
+          currentPrice: quote.price,
+          change: quote.changePercent.toFixed(2) + "%",
+          volume: quote.volume,
+          avgVolume: quote.avgVolume,
+          bars: data.length,
+          lastBar: data[data.length - 1],
+          recentBars: data.slice(-5).map((d) => ({
+            date: d.timestamp.toISOString().split("T")[0],
+            O: d.open.toFixed(2),
+            H: d.high.toFixed(2),
+            L: d.low.toFixed(2),
+            C: d.close.toFixed(2),
+            V: d.volume,
+          })),
+        };
+      } catch (err) {
+        return { error: `get_stock_data failed for ${ticker}: ${err instanceof Error ? err.message : String(err)}` };
+      }
     },
   }),
 
@@ -59,25 +63,29 @@ export const tradingTools = {
         .describe("Number of days of historical data (max 30)"),
     }),
     execute: async ({ coinId, days }) => {
-      const [quote, ohlc] = await Promise.all([
-        fetchCryptoPrice(coinId),
-        fetchCryptoOHLC(coinId, Math.min(days, 30) as 1 | 7 | 14 | 30),
-      ]);
-      return {
-        coinId,
-        currentPrice: quote.price,
-        change24h: quote.changePercent.toFixed(2) + "%",
-        volume24h: quote.volume,
-        marketCap: quote.marketCap,
-        bars: ohlc.length,
-        recentBars: ohlc.slice(-5).map((d) => ({
-          date: d.timestamp.toISOString().split("T")[0],
-          O: d.open.toFixed(2),
-          H: d.high.toFixed(2),
-          L: d.low.toFixed(2),
-          C: d.close.toFixed(2),
-        })),
-      };
+      try {
+        const [quote, ohlc] = await Promise.all([
+          fetchCryptoPrice(coinId),
+          fetchCryptoOHLC(coinId, Math.min(days, 30) as 1 | 7 | 14 | 30),
+        ]);
+        return {
+          coinId,
+          currentPrice: quote.price,
+          change24h: quote.changePercent.toFixed(2) + "%",
+          volume24h: quote.volume,
+          marketCap: quote.marketCap,
+          bars: ohlc.length,
+          recentBars: ohlc.slice(-5).map((d) => ({
+            date: d.timestamp.toISOString().split("T")[0],
+            O: d.open.toFixed(2),
+            H: d.high.toFixed(2),
+            L: d.low.toFixed(2),
+            C: d.close.toFixed(2),
+          })),
+        };
+      } catch (err) {
+        return { error: `get_crypto_data failed for ${coinId}: ${err instanceof Error ? err.message : String(err)}` };
+      }
     },
   }),
 
@@ -96,57 +104,61 @@ export const tradingTools = {
         .describe("Type of asset"),
     }),
     execute: async ({ ticker, timeframe, assetType }) => {
-      let data: OHLCV[];
-      let quote: Quote;
+      try {
+        let data: OHLCV[];
+        let quote: Quote;
 
-      if (assetType === "crypto") {
-        [quote, data] = await Promise.all([
-          fetchCryptoPrice(ticker),
-          fetchCryptoOHLC(ticker, 30),
-        ]);
-      } else {
-        [quote, data] = await Promise.all([
-          fetchQuote(ticker),
-          fetchOHLCV(ticker, timeframe as Timeframe),
-        ]);
-      }
+        if (assetType === "crypto") {
+          [quote, data] = await Promise.all([
+            fetchCryptoPrice(ticker),
+            fetchCryptoOHLC(ticker, 30),
+          ]);
+        } else {
+          [quote, data] = await Promise.all([
+            fetchQuote(ticker),
+            fetchOHLCV(ticker, timeframe as Timeframe),
+          ]);
+        }
 
-      if (data.length < 50) {
-        return { error: `Insufficient data: only ${data.length} bars (need 50+)` };
-      }
+        if (data.length < 50) {
+          return { error: `Insufficient data: only ${data.length} bars (need 50+)` };
+        }
 
-      const technicals = computeTechnicalAnalysis(ticker, data, timeframe as Timeframe);
-      const levels = computeLevelAnalysis(ticker, data);
-      const volAnalysis = computeVolumeAnalysis(data);
+        const technicals = computeTechnicalAnalysis(ticker, data, timeframe as Timeframe);
+        const levels = computeLevelAnalysis(ticker, data);
+        const volAnalysis = computeVolumeAnalysis(data);
 
-      const report = formatReportForAgent({
-        ticker,
-        assetType: assetType as AssetType,
-        quote,
-        technicals,
-        levels,
-        marketCondition: {
-          regime: "range_bound",
-          sp500Change: 0,
-          nasdaqChange: 0,
-          sentiment: {
-            fearGreed: { value: 50, classification: "Neutral", timestamp: new Date() },
+        const report = formatReportForAgent({
+          ticker,
+          assetType: assetType as AssetType,
+          quote,
+          technicals,
+          levels,
+          marketCondition: {
+            regime: "range_bound",
+            sp500Change: 0,
+            nasdaqChange: 0,
+            sentiment: {
+              fearGreed: { value: 50, classification: "Neutral", timestamp: new Date() },
+            },
+            timestamp: new Date(),
           },
           timestamp: new Date(),
-        },
-        timestamp: new Date(),
-      });
+        });
 
-      return {
-        analysis: report,
-        volumeProfile: {
-          pointOfControl: volAnalysis.pointOfControl.toFixed(2),
-          valueAreaLow: volAnalysis.valueAreaLow.toFixed(2),
-          valueAreaHigh: volAnalysis.valueAreaHigh.toFixed(2),
-          currentVsAvg: volAnalysis.currentVsAvg.toFixed(2) + "x",
-          volumeTrend: volAnalysis.volumeTrend,
-        },
-      };
+        return {
+          analysis: report,
+          volumeProfile: {
+            pointOfControl: volAnalysis.pointOfControl.toFixed(2),
+            valueAreaLow: volAnalysis.valueAreaLow.toFixed(2),
+            valueAreaHigh: volAnalysis.valueAreaHigh.toFixed(2),
+            currentVsAvg: volAnalysis.currentVsAvg.toFixed(2) + "x",
+            volumeTrend: volAnalysis.volumeTrend,
+          },
+        };
+      } catch (err) {
+        return { error: `analyze_technicals failed for ${ticker}: ${err instanceof Error ? err.message : String(err)}` };
+      }
     },
   }),
 
@@ -155,11 +167,15 @@ export const tradingTools = {
       "Fetch market sentiment data: Crypto Fear & Greed Index and market breadth indicators.",
     inputSchema: z.object({}),
     execute: async () => {
-      const sentiment = await fetchSentimentData();
-      return {
-        summary: getSentimentSummary(sentiment),
-        raw: sentiment,
-      };
+      try {
+        const sentiment = await fetchSentimentData();
+        return {
+          summary: getSentimentSummary(sentiment),
+          raw: sentiment,
+        };
+      } catch (err) {
+        return { error: `get_sentiment failed: ${err instanceof Error ? err.message : String(err)}` };
+      }
     },
   }),
 
@@ -178,55 +194,59 @@ export const tradingTools = {
         .describe("Type of asset"),
     }),
     execute: async ({ ticker, timeframe, assetType }) => {
-      const data: OHLCV[] =
-        assetType === "crypto"
-          ? await fetchCryptoOHLC(ticker, 30)
-          : await fetchOHLCV(ticker, timeframe as Timeframe);
+      try {
+        const data: OHLCV[] =
+          assetType === "crypto"
+            ? await fetchCryptoOHLC(ticker, 30)
+            : await fetchOHLCV(ticker, timeframe as Timeframe);
 
-      if (data.length < 10) {
-        return { error: "Insufficient data for level analysis" };
+        if (data.length < 10) {
+          return { error: "Insufficient data for level analysis" };
+        }
+
+        const levels = computeLevelAnalysis(ticker, data);
+        const currentPrice = data[data.length - 1]?.close;
+
+        if (!currentPrice) {
+          return { error: "Insufficient data for level analysis" };
+        }
+
+        return {
+          ticker,
+          currentPrice: currentPrice.toFixed(2),
+          nearestSupport: levels.nearestSupport.toFixed(2),
+          nearestResistance: levels.nearestResistance.toFixed(2),
+          fibonacci: {
+            "23.6%": levels.fibonacci.level236.toFixed(2),
+            "38.2%": levels.fibonacci.level382.toFixed(2),
+            "50.0%": levels.fibonacci.level500.toFixed(2),
+            "61.8%": levels.fibonacci.level618.toFixed(2),
+            "78.6%": levels.fibonacci.level786.toFixed(2),
+          },
+          pivots: {
+            type: levels.pivots.type,
+            PP: levels.pivots.pivot.toFixed(2),
+            R1: levels.pivots.r1.toFixed(2),
+            R2: levels.pivots.r2.toFixed(2),
+            R3: levels.pivots.r3.toFixed(2),
+            S1: levels.pivots.s1.toFixed(2),
+            S2: levels.pivots.s2.toFixed(2),
+            S3: levels.pivots.s3.toFixed(2),
+          },
+          keySupports: levels.supports.slice(0, 5).map((s) => ({
+            price: s.price.toFixed(2),
+            strength: s.strength,
+            source: s.source,
+          })),
+          keyResistances: levels.resistances.slice(0, 5).map((r) => ({
+            price: r.price.toFixed(2),
+            strength: r.strength,
+            source: r.source,
+          })),
+        };
+      } catch (err) {
+        return { error: `get_support_resistance failed for ${ticker}: ${err instanceof Error ? err.message : String(err)}` };
       }
-
-      const levels = computeLevelAnalysis(ticker, data);
-      const currentPrice = data[data.length - 1]?.close;
-
-      if (!currentPrice) {
-        return { error: "Insufficient data for level analysis" };
-      }
-
-      return {
-        ticker,
-        currentPrice: currentPrice.toFixed(2),
-        nearestSupport: levels.nearestSupport.toFixed(2),
-        nearestResistance: levels.nearestResistance.toFixed(2),
-        fibonacci: {
-          "23.6%": levels.fibonacci.level236.toFixed(2),
-          "38.2%": levels.fibonacci.level382.toFixed(2),
-          "50.0%": levels.fibonacci.level500.toFixed(2),
-          "61.8%": levels.fibonacci.level618.toFixed(2),
-          "78.6%": levels.fibonacci.level786.toFixed(2),
-        },
-        pivots: {
-          type: levels.pivots.type,
-          PP: levels.pivots.pivot.toFixed(2),
-          R1: levels.pivots.r1.toFixed(2),
-          R2: levels.pivots.r2.toFixed(2),
-          R3: levels.pivots.r3.toFixed(2),
-          S1: levels.pivots.s1.toFixed(2),
-          S2: levels.pivots.s2.toFixed(2),
-          S3: levels.pivots.s3.toFixed(2),
-        },
-        keySupports: levels.supports.slice(0, 5).map((s) => ({
-          price: s.price.toFixed(2),
-          strength: s.strength,
-          source: s.source,
-        })),
-        keyResistances: levels.resistances.slice(0, 5).map((r) => ({
-          price: r.price.toFixed(2),
-          strength: r.strength,
-          source: r.source,
-        })),
-      };
     },
   }),
 };
